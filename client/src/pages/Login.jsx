@@ -30,24 +30,36 @@ export default function Login() {
         <h1>Spendly</h1>
         <p>Personal money tracker</p>
       </div>
-      <form onSubmit={submit} className="card">
+      <form onSubmit={submit} className="card" method="post" action="/login">
         {err && (
           <p style={{ color: 'var(--expense)', marginTop: 0, fontSize: '0.9rem' }}>{err}</p>
         )}
         <div className="field">
-          <label className="label">Email</label>
+          <label className="label" htmlFor="login-email">
+            Email
+          </label>
           <input
+            id="login-email"
+            name="username"
             className="input"
             type="email"
+            inputMode="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck="false"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
+            autoComplete="username"
             required
           />
         </div>
         <div className="field">
-          <label className="label">Password</label>
+          <label className="label" htmlFor="login-password">
+            Password
+          </label>
           <input
+            id="login-password"
+            name="password"
             className="input"
             type="password"
             value={password}

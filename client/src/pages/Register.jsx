@@ -31,13 +31,17 @@ export default function Register() {
         <h1>Join Spendly</h1>
         <p>Start tracking in seconds</p>
       </div>
-      <form onSubmit={submit} className="card">
+      <form onSubmit={submit} className="card" method="post" action="/register">
         {err && (
           <p style={{ color: 'var(--expense)', marginTop: 0, fontSize: '0.9rem' }}>{err}</p>
         )}
         <div className="field">
-          <label className="label">Name</label>
+          <label className="label" htmlFor="register-name">
+            Name
+          </label>
           <input
+            id="register-name"
+            name="name"
             className="input"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -46,10 +50,18 @@ export default function Register() {
           />
         </div>
         <div className="field">
-          <label className="label">Email</label>
+          <label className="label" htmlFor="register-email">
+            Email
+          </label>
           <input
+            id="register-email"
+            name="email"
             className="input"
             type="email"
+            inputMode="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck="false"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
@@ -57,8 +69,12 @@ export default function Register() {
           />
         </div>
         <div className="field">
-          <label className="label">Password</label>
+          <label className="label" htmlFor="register-password">
+            Password
+          </label>
           <input
+            id="register-password"
+            name="password"
             className="input"
             type="password"
             value={password}
