@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "build": "node -e \"console.log('Spendly server: no compile step; dependencies installed by host.')\""
+    "build": "npm install"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
