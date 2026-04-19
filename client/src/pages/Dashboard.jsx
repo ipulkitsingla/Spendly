@@ -56,6 +56,8 @@ export default function Dashboard() {
   const [modal, setModal] = useState(null);
   const [editTx, setEditTx] = useState(null);
   const [err, setErr] = useState('');
+  const [incomeHidden, setIncomeHidden] = useState(false);
+  const [netHidden, setNetHidden] = useState(false);
 
   const loadMeta = useCallback(async () => {
     const [accs, cats] = await Promise.all([api.accounts(), api.categories()]);
@@ -125,6 +127,7 @@ export default function Dashboard() {
   const endRunning = txs.length ? txs[0].runningBalance : opening;
 
   const monthTitle = formatMonthLong(new Date(month + '-01T12:00:00'));
+  const netMonth = monthIncome - monthExpense;
 
   const editTxNormalized = editTx
     ? {
@@ -232,16 +235,66 @@ export default function Dashboard() {
 
       <div className="summary-strip summary-strip--three">
         <div className="stat">
-          <span>Income</span>
-          <strong className="type-income">{formatMoney(monthIncome)}</strong>
+          <span className="stat-title-row">
+            <span>Income</span>
+            <button
+              type="button"
+              className="stat-eye-btn"
+              aria-label={incomeHidden ? 'Show income amount' : 'Hide income amount'}
+              aria-pressed={incomeHidden}
+              onClick={() => setIncomeHidden((v) => !v)}
+            >
+              {incomeHidden ? (
+                <svg viewBox="0 0 24 24" aria-hidden>
+                  <path d="M3 3l18 18" />
+                  <path d="M10.6 10.6a2 2 0 1 0 2.8 2.8" />
+                  <path d="M9.5 5.5A11.5 11.5 0 0 1 12 5c4.8 0 8.7 2.9 10 7-0.5 1.5-1.4 2.8-2.6 3.9" />
+                  <path d="M6.2 8.2A11.3 11.3 0 0 0 2 12c1.3 4.1 5.2 7 10 7 1.2 0 2.3-0.2 3.4-0.5" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" aria-hidden>
+                  <path d="M2 12s3.8-7 10-7 10 7 10 7-3.8 7-10 7S2 12 2 12z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              )}
+            </button>
+          </span>
+          <strong className={`type-income ${incomeHidden ? 'stat-hidden-amount' : ''}`}>
+            {incomeHidden ? '******' : formatMoney(monthIncome)}
+          </strong>
         </div>
         <div className="stat">
           <span>Expenses</span>
           <strong className="type-expense">{formatMoney(monthExpense)}</strong>
         </div>
         <div className="stat">
-          <span>Net (month)</span>
-          <strong>{formatMoney(monthIncome - monthExpense)}</strong>
+          <span className="stat-title-row">
+            <span>Net (month)</span>
+            <button
+              type="button"
+              className="stat-eye-btn"
+              aria-label={netHidden ? 'Show net amount' : 'Hide net amount'}
+              aria-pressed={netHidden}
+              onClick={() => setNetHidden((v) => !v)}
+            >
+              {netHidden ? (
+                <svg viewBox="0 0 24 24" aria-hidden>
+                  <path d="M3 3l18 18" />
+                  <path d="M10.6 10.6a2 2 0 1 0 2.8 2.8" />
+                  <path d="M9.5 5.5A11.5 11.5 0 0 1 12 5c4.8 0 8.7 2.9 10 7-0.5 1.5-1.4 2.8-2.6 3.9" />
+                  <path d="M6.2 8.2A11.3 11.3 0 0 0 2 12c1.3 4.1 5.2 7 10 7 1.2 0 2.3-0.2 3.4-0.5" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" aria-hidden>
+                  <path d="M2 12s3.8-7 10-7 10 7 10 7-3.8 7-10 7S2 12 2 12z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              )}
+            </button>
+          </span>
+          <strong className={netHidden ? 'stat-hidden-amount' : ''}>
+            {netHidden ? '******' : formatMoney(netMonth)}
+          </strong>
         </div>
       </div>
 

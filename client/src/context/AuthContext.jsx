@@ -3,6 +3,31 @@ import { api } from '../api.js';
 import { browserOnline, isOfflineFetchError } from '../offline/networkState.js';
 
 const AuthContext = createContext(null);
+const USER_CACHE_KEY = 'spendly_user';
+
+function readCachedUser() {
+  try {
+    const raw = sessionStorage.getItem(USER_CACHE_KEY) || localStorage.getItem(USER_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (!parsed.id || !parsed.email) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedUser(profile) {
+  const raw = JSON.stringify(profile);
+  sessionStorage.setItem(USER_CACHE_KEY, raw);
+  localStorage.setItem(USER_CACHE_KEY, raw);
+}
+
+function clearCachedUser() {
+  sessionStorage.removeItem(USER_CACHE_KEY);
+  localStorage.removeItem(USER_CACHE_KEY);
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -18,29 +43,24 @@ export function AuthProvider({ children }) {
       .me()
       .then((u) => {
         const profile = { id: u._id || u.id, name: u.name, email: u.email };
-        sessionStorage.setItem('spendly_user', JSON.stringify(profile));
+        writeCachedUser(profile);
         setUser(profile);
       })
       .catch((e) => {
         if (e?.status === 401) {
           localStorage.removeItem('spendly_token');
-          sessionStorage.removeItem('spendly_user');
+          clearCachedUser();
           setUser(null);
           return;
         }
         if (token && (!browserOnline() || isOfflineFetchError(e))) {
-          try {
-            const raw = sessionStorage.getItem('spendly_user');
-            if (raw) {
-              setUser(JSON.parse(raw));
-              return;
-            }
-          } catch {
-            /* ignore */
+          const cached = readCachedUser();
+          if (cached) {
+            setUser(cached);
+            return;
           }
         }
-        localStorage.removeItem('spendly_token');
-        sessionStorage.removeItem('spendly_user');
+        // Keep token for transient/network issues; only 401 should force logout.
         setUser(null);
       })
       .finally(() => setLoading(false));
@@ -50,7 +70,7 @@ export function AuthProvider({ children }) {
     const data = await api.login({ email, password });
     localStorage.setItem('spendly_token', data.token);
     const profile = { id: data.user.id, name: data.user.name, email: data.user.email };
-    sessionStorage.setItem('spendly_user', JSON.stringify(profile));
+    writeCachedUser(profile);
     setUser(profile);
     return data;
   };
@@ -59,14 +79,14 @@ export function AuthProvider({ children }) {
     const data = await api.register({ name, email, password });
     localStorage.setItem('spendly_token', data.token);
     const profile = { id: data.user.id, name: data.user.name, email: data.user.email };
-    sessionStorage.setItem('spendly_user', JSON.stringify(profile));
+    writeCachedUser(profile);
     setUser(profile);
     return data;
   };
 
   const logout = () => {
     localStorage.removeItem('spendly_token');
-    sessionStorage.removeItem('spendly_user');
+    clearCachedUser();
     setUser(null);
   };
 
