@@ -24,6 +24,12 @@ export default function PendingPage() {
     load().catch((e) => setErr(e.message));
   }, [load]);
 
+  useEffect(() => {
+    const h = () => load().catch((e) => setErr(e.message));
+    window.addEventListener('spendly-sync-done', h);
+    return () => window.removeEventListener('spendly-sync-done', h);
+  }, [load]);
+
   const refresh = () => load().catch((e) => setErr(e.message));
 
   const doSettle = async (e) => {

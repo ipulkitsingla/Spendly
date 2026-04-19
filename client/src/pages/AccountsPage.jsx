@@ -26,6 +26,12 @@ export default function AccountsPage() {
     load().catch((e) => setErr(e.message));
   }, [load]);
 
+  useEffect(() => {
+    const h = () => load().catch((e) => setErr(e.message));
+    window.addEventListener('spendly-sync-done', h);
+    return () => window.removeEventListener('spendly-sync-done', h);
+  }, [load]);
+
   const addAccount = async (e) => {
     e.preventDefault();
     if (!newName.trim()) return;

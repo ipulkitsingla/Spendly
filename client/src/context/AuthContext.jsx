@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { api } from '../api.js';
+import { browserOnline, isOfflineFetchError } from '../offline/networkState.js';
 
 const AuthContext = createContext(null);
 
@@ -15,9 +16,31 @@ export function AuthProvider({ children }) {
     }
     api
       .me()
-      .then((u) => setUser({ id: u._id, name: u.name, email: u.email }))
-      .catch(() => {
+      .then((u) => {
+        const profile = { id: u._id || u.id, name: u.name, email: u.email };
+        sessionStorage.setItem('spendly_user', JSON.stringify(profile));
+        setUser(profile);
+      })
+      .catch((e) => {
+        if (e?.status === 401) {
+          localStorage.removeItem('spendly_token');
+          sessionStorage.removeItem('spendly_user');
+          setUser(null);
+          return;
+        }
+        if (token && (!browserOnline() || isOfflineFetchError(e))) {
+          try {
+            const raw = sessionStorage.getItem('spendly_user');
+            if (raw) {
+              setUser(JSON.parse(raw));
+              return;
+            }
+          } catch {
+            /* ignore */
+          }
+        }
         localStorage.removeItem('spendly_token');
+        sessionStorage.removeItem('spendly_user');
         setUser(null);
       })
       .finally(() => setLoading(false));
@@ -26,19 +49,24 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     const data = await api.login({ email, password });
     localStorage.setItem('spendly_token', data.token);
-    setUser(data.user);
+    const profile = { id: data.user.id, name: data.user.name, email: data.user.email };
+    sessionStorage.setItem('spendly_user', JSON.stringify(profile));
+    setUser(profile);
     return data;
   };
 
   const register = async (name, email, password) => {
     const data = await api.register({ name, email, password });
     localStorage.setItem('spendly_token', data.token);
-    setUser(data.user);
+    const profile = { id: data.user.id, name: data.user.name, email: data.user.email };
+    sessionStorage.setItem('spendly_user', JSON.stringify(profile));
+    setUser(profile);
     return data;
   };
 
   const logout = () => {
     localStorage.removeItem('spendly_token');
+    sessionStorage.removeItem('spendly_user');
     setUser(null);
   };
 

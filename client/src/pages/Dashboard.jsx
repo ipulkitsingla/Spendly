@@ -6,6 +6,7 @@ import { categoryIcon } from '../utils/categoryIcons.js';
 import QuickAddFab from '../components/QuickAddFab.jsx';
 import TxModals from '../components/TxModals.jsx';
 import EditTransactionModal from '../components/EditTransactionModal.jsx';
+import SwipeableRow from '../components/SwipeableRow.jsx';
 
 function txTitle(tx) {
   if (tx.type === 'transfer') {
@@ -58,6 +59,20 @@ export default function Dashboard() {
     loadTx().catch((e) => setErr(e.message));
   }, [loadMeta, loadTx]);
 
+  const deleteTx = useCallback(
+    async (tx) => {
+      if (!window.confirm('Delete this transaction? Balances will be recalculated.')) return;
+      setErr('');
+      try {
+        await api.deleteTransaction(tx._id);
+        await refresh();
+      } catch (e) {
+        setErr(e.message);
+      }
+    },
+    [refresh]
+  );
+
   useEffect(() => {
     loadMeta().catch((e) => setErr(e.message));
   }, [loadMeta]);
@@ -66,6 +81,12 @@ export default function Dashboard() {
     setErr('');
     loadTx().catch((e) => setErr(e.message));
   }, [loadTx]);
+
+  useEffect(() => {
+    const onSynced = () => refresh();
+    window.addEventListener('spendly-sync-done', onSynced);
+    return () => window.removeEventListener('spendly-sync-done', onSynced);
+  }, [refresh]);
 
   const accountsById = useMemo(
     () => Object.fromEntries(accounts.map((a) => [String(a._id), a])),
@@ -183,26 +204,39 @@ export default function Dashboard() {
             const rowAccName = rowAccId ? accountsById[rowAccId]?.name || 'Account' : '';
 
             return (
-              <li key={tx._id} style={{ margin: 0, padding: 0 }}>
-                <button type="button" className="tx-row-v2" onClick={() => setEditTx(tx)}>
-                  <div className="tx-icon-tile" aria-hidden>
-                    {icon}
-                  </div>
-                  <div className="tx-v2-body">
-                    <div className="tx-v2-title">{txTitle(tx)}</div>
-                    <div className="tx-v2-meta">{txSubtitle(tx, accountsById)}</div>
-                  </div>
-                  <div className="tx-v2-right">
-                    <div className={`tx-v2-amt ${cls}`}>
-                      {signPrefix}
-                      {formatMoney(showAbs)}
+              <li key={tx._id} style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+                <SwipeableRow onEdit={() => setEditTx(tx)} onDelete={() => deleteTx(tx)}>
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    className="tx-row-v2"
+                    onClick={() => setEditTx(tx)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setEditTx(tx);
+                      }
+                    }}
+                  >
+                    <div className="tx-icon-tile" aria-hidden>
+                      {icon}
                     </div>
-                    <div className="tx-v2-bal">
-                      bal {formatMoney(rowBal)}
-                      {rowAccName ? ` · ${rowAccName}` : ''}
+                    <div className="tx-v2-body">
+                      <div className="tx-v2-title">{txTitle(tx)}</div>
+                      <div className="tx-v2-meta">{txSubtitle(tx, accountsById)}</div>
+                    </div>
+                    <div className="tx-v2-right">
+                      <div className={`tx-v2-amt ${cls}`}>
+                        {signPrefix}
+                        {formatMoney(showAbs)}
+                      </div>
+                      <div className="tx-v2-bal">
+                        bal {formatMoney(rowBal)}
+                        {rowAccName ? ` · ${rowAccName}` : ''}
+                      </div>
                     </div>
                   </div>
-                </button>
+                </SwipeableRow>
               </li>
             );
           })}
