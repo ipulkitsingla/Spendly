@@ -224,11 +224,11 @@ export default function Dashboard() {
 
       {err && <p style={{ color: 'var(--expense)', padding: '0 16px' }}>{err}</p>}
 
-      <div className="dashboard-month-running card">
+      {/* <div className="dashboard-month-running card">
         <div className="dashboard-month-running-label">Running balance (this month)</div>
         <div className="dashboard-month-running-amount">{formatMoney(endRunning)}</div>
         <p className="dashboard-month-running-hint">At end of the list for {monthTitle}</p>
-      </div>
+      </div> */}
 
       <div className="summary-strip summary-strip--three">
         <div className="stat">
