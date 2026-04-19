@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../api.js';
+import { usePrivacy } from '../context/PrivacyContext.jsx';
 import { formatMonthLong } from '../utils/dates.js';
 import { formatDay, formatMoney, monthKey, shiftMonth } from '../utils/format.js';
 import { categoryIcon } from '../utils/categoryIcons.js';
+import Money from '../components/Money.jsx';
 import QuickAddFab from '../components/QuickAddFab.jsx';
 import TxModals from '../components/TxModals.jsx';
 import EditTransactionModal from '../components/EditTransactionModal.jsx';
@@ -34,6 +36,18 @@ function txSubtitle(tx, accountsById) {
 }
 
 export default function Dashboard() {
+  const {
+    faceLock,
+    credentialId,
+    registerBiometric,
+    lock,
+    unveiled,
+    biometricReady,
+    revealWithBiometric,
+    heroBalanceHidden,
+  } = usePrivacy();
+  const [faceErr, setFaceErr] = useState('');
+
   const [month, setMonth] = useState(() => monthKey());
   const [accountFilter, setAccountFilter] = useState('');
   const [accounts, setAccounts] = useState([]);
@@ -145,7 +159,70 @@ export default function Dashboard() {
 
       {err && <p style={{ color: 'var(--expense)', padding: '0 16px' }}>{err}</p>}
 
-      <div className="summary-strip">
+      <div className="dashboard-hero card">
+        <div className="dashboard-hero-top">
+          <div>
+            <div className="dashboard-hero-label">Running balance</div>
+            <div className="dashboard-hero-amount">
+              <Money value={endRunning} hero />
+            </div>
+            <p className="dashboard-hero-hint">
+              {accountFilter
+                ? accountsById[accountFilter]?.name || 'Account'
+                : 'All accounts (net worth)'}
+            </p>
+          </div>
+        </div>
+        <div className="dashboard-hero-actions">
+          {!faceLock || !credentialId ? (
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={!biometricReady}
+              onClick={async () => {
+                setFaceErr('');
+                try {
+                  await registerBiometric();
+                } catch (e) {
+                  setFaceErr(e.message || 'Could not enable Face Lock');
+                }
+              }}
+            >
+              Enable Face Lock
+            </button>
+          ) : (
+            <>
+              {heroBalanceHidden && (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => revealWithBiometric().catch(() => {})}
+                >
+                  Unlock
+                </button>
+              )}
+              {unveiled && (
+                <button type="button" className="btn btn-ghost" onClick={() => lock()}>
+                  Hide
+                </button>
+              )}
+            </>
+          )}
+        </div>
+        {faceErr && (
+          <p className="dashboard-hero-err" role="alert">
+            {faceErr}
+          </p>
+        )}
+        {!biometricReady && (!credentialId || !faceLock) && (
+          <p className="dashboard-hero-note">
+            Face ID / fingerprint is not available in this browser. Use Safari or Chrome on a device with a
+            secure screen lock.
+          </p>
+        )}
+      </div>
+
+      <div className="summary-strip summary-strip--three">
         <div className="stat">
           <span>Income</span>
           <strong className="type-income">{formatMoney(monthIncome)}</strong>
@@ -157,10 +234,6 @@ export default function Dashboard() {
         <div className="stat">
           <span>Net (month)</span>
           <strong>{formatMoney(monthIncome - monthExpense)}</strong>
-        </div>
-        <div className="stat">
-          <span>Running balance</span>
-          <strong>{formatMoney(endRunning)}</strong>
         </div>
       </div>
 

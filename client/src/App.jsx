@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './context/AuthContext.jsx';
+import { PrivacyProvider } from './context/PrivacyContext.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import AppLayout from './components/AppLayout.jsx';
@@ -38,7 +39,9 @@ export default function App() {
         path="/"
         element={
           <Protected>
-            <AppLayout />
+            <PrivacyProvider>
+              <AppLayout />
+            </PrivacyProvider>
           </Protected>
         }
       >
