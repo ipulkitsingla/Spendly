@@ -6,7 +6,11 @@ import App from './App.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { drainOutbox } from './offline/sync.js';
 import { browserOnline } from './offline/networkState.js';
+import { initTheme } from './utils/theme.js';
 import './styles/index.css';
+import './styles/theme-overrides.css';
+
+initTheme();
 
 registerSW({ immediate: true });
 

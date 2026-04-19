@@ -8,6 +8,8 @@ import Dashboard from './pages/Dashboard.jsx';
 import StatsPage from './pages/StatsPage.jsx';
 import AccountsPage from './pages/AccountsPage.jsx';
 import PendingPage from './pages/PendingPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
+import ThemeToggle from './components/ThemeToggle.jsx';
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -26,7 +28,9 @@ export default function App() {
   const { user, loading } = useAuth();
 
   return (
-    <Routes>
+    <>
+      <ThemeToggle />
+      <Routes>
       <Route
         path="/login"
         element={!loading && user ? <Navigate to="/" replace /> : <Login />}
@@ -49,8 +53,10 @@ export default function App() {
         <Route path="stats" element={<StatsPage />} />
         <Route path="accounts" element={<AccountsPage />} />
         <Route path="pending" element={<PendingPage />} />
+        <Route path="profile" element={<ProfilePage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 }

@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext.jsx';
 import { browserOnline } from '../offline/networkState.js';
 import { drainOutbox } from '../offline/sync.js';
 import { outboxCount } from '../offline/store.js';
 
 export default function AppLayout() {
-  const { user, logout } = useAuth();
   const [online, setOnline] = useState(() => browserOnline());
   const [syncNote, setSyncNote] = useState('');
 
@@ -46,12 +44,9 @@ export default function AppLayout() {
   return (
     <div className="app-shell">
       <aside className="desktop-rail">
-        <div className="card" style={{ marginBottom: 16 }}>
-          <strong style={{ fontSize: '1.1rem' }}>Spendly</strong>
-          <p style={{ margin: '8px 0 0', color: 'var(--muted)', fontSize: '0.9rem' }}>{user?.name}</p>
-          <button type="button" className="btn btn-ghost" style={{ marginTop: 12, width: '100%' }} onClick={logout}>
-            Log out
-          </button>
+        <div className="card desktop-rail-brand">
+          <strong className="desktop-rail-title">Spendly</strong>
+          <p className="desktop-rail-tagline">Money tracker</p>
         </div>
         <nav className="desktop-nav">
           <NavLink end to="/" className={({ isActive }) => (isActive ? 'active' : '')}>
@@ -65,6 +60,9 @@ export default function AppLayout() {
           </NavLink>
           <NavLink to="/pending" className={({ isActive }) => (isActive ? 'active' : '')}>
             <span>🧾</span> Pending
+          </NavLink>
+          <NavLink to="/profile" className={({ isActive }) => (isActive ? 'active' : '')}>
+            <span>👤</span> Profile
           </NavLink>
         </nav>
       </aside>
@@ -93,6 +91,10 @@ export default function AppLayout() {
         <NavLink to="/pending" className={({ isActive }) => (isActive ? 'active' : '')}>
           <span className="nav-icon">🧾</span>
           Debts
+        </NavLink>
+        <NavLink to="/profile" className={({ isActive }) => (isActive ? 'active' : '')}>
+          <span className="nav-icon">👤</span>
+          Me
         </NavLink>
       </nav>
     </div>

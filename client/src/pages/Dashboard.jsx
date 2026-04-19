@@ -107,6 +107,16 @@ export default function Dashboard() {
     [accounts]
   );
 
+  /** Current total: all accounts, or selected account balance */
+  const displayTotal = useMemo(() => {
+    if (!accounts.length) return 0;
+    if (accountFilter) {
+      const a = accounts.find((x) => String(x._id) === String(accountFilter));
+      return a ? Number(a.balance) || 0 : 0;
+    }
+    return accounts.reduce((s, a) => s + (Number(a.balance) || 0), 0);
+  }, [accounts, accountFilter]);
+
   const txs = bundle?.transactions || [];
   const opening = bundle?.openingBalance ?? 0;
 
@@ -127,53 +137,17 @@ export default function Dashboard() {
 
   return (
     <>
-      <header className="page-header">
-        <h1>Dashboard</h1>
-      </header>
-
-      <div className="month-bar">
-        <button type="button" aria-label="Previous month" onClick={() => setMonth((m) => shiftMonth(m, -1))}>
-          ‹
-        </button>
-        <strong>{monthTitle}</strong>
-        <button type="button" aria-label="Next month" onClick={() => setMonth((m) => shiftMonth(m, 1))}>
-          ›
-        </button>
-      </div>
-
-      <div style={{ padding: '0 16px 12px' }}>
-        <label className="label">Filter by account</label>
-        <select
-          className="input"
-          value={accountFilter}
-          onChange={(e) => setAccountFilter(e.target.value)}
-        >
-          <option value="">All accounts (net worth)</option>
-          {accounts.map((a) => (
-            <option key={a._id} value={a._id}>
-              {a.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {err && <p style={{ color: 'var(--expense)', padding: '0 16px' }}>{err}</p>}
-
-      <div className="dashboard-hero card">
-        <div className="dashboard-hero-top">
-          <div>
-            <div className="dashboard-hero-label">Running balance</div>
-            <div className="dashboard-hero-amount">
-              <Money value={endRunning} hero />
-            </div>
-            <p className="dashboard-hero-hint">
-              {accountFilter
-                ? accountsById[accountFilter]?.name || 'Account'
-                : 'All accounts (net worth)'}
-            </p>
-          </div>
+      <section className="balance-masthead">
+        <p className="balance-masthead-label">
+          {accountFilter ? accountsById[accountFilter]?.name || 'Account' : 'Total balance'}
+        </p>
+        <div className="balance-masthead-amount">
+          <Money value={displayTotal} hero />
         </div>
-        <div className="dashboard-hero-actions">
+        <p className="balance-masthead-sub">
+          {accountFilter ? 'Current balance in this account' : 'Across all your accounts'}
+        </p>
+        <div className="dashboard-hero-actions balance-masthead-actions">
           {!faceLock || !credentialId ? (
             <button
               type="button"
@@ -220,6 +194,40 @@ export default function Dashboard() {
             secure screen lock.
           </p>
         )}
+      </section>
+
+      <div className="month-bar">
+        <button type="button" aria-label="Previous month" onClick={() => setMonth((m) => shiftMonth(m, -1))}>
+          ‹
+        </button>
+        <strong>{monthTitle}</strong>
+        <button type="button" aria-label="Next month" onClick={() => setMonth((m) => shiftMonth(m, 1))}>
+          ›
+        </button>
+      </div>
+
+      <div className="dashboard-filter-row">
+        <label className="label">Filter by account</label>
+        <select
+          className="input"
+          value={accountFilter}
+          onChange={(e) => setAccountFilter(e.target.value)}
+        >
+          <option value="">All accounts (net worth)</option>
+          {accounts.map((a) => (
+            <option key={a._id} value={a._id}>
+              {a.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {err && <p style={{ color: 'var(--expense)', padding: '0 16px' }}>{err}</p>}
+
+      <div className="dashboard-month-running card">
+        <div className="dashboard-month-running-label">Running balance (this month)</div>
+        <div className="dashboard-month-running-amount">{formatMoney(endRunning)}</div>
+        <p className="dashboard-month-running-hint">At end of the list for {monthTitle}</p>
       </div>
 
       <div className="summary-strip summary-strip--three">
