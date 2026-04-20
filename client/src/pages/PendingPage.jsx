@@ -13,11 +13,19 @@ export default function PendingPage() {
   const [editing, setEditing] = useState(null);
 
   const load = useCallback(async () => {
-    const [p, a, cats] = await Promise.all([api.pending(), api.accounts(), api.categories()]);
+    const [p, a, cats] = await Promise.all([
+      api.pending(),
+      api.accounts(),
+      api.categories(),
+    ]);
     setItems(p);
     setAccounts(a);
     setCategories(cats);
-    setAccountId((prev) => (prev && a.some((x) => x._id === prev) ? prev : a[0]?._id || ''));
+    setAccountId((prev) =>
+      prev && a.some((x) => x._id === prev)
+        ? prev
+        : a[0]?._id || ''
+    );
   }, []);
 
   useEffect(() => {
@@ -48,7 +56,12 @@ export default function PendingPage() {
   const pending = items.filter((i) => i.status === 'pending');
   const settled = items.filter((i) => i.status === 'settled');
 
-  const editingItem = editing ? pending.find((p) => p._id === editing) : null;
+  // ✅ NEW: total pending calculation
+  const totalPendingAmount = pending.reduce((sum, p) => sum + p.amount, 0);
+
+  const editingItem = editing
+    ? pending.find((p) => p._id === editing)
+    : null;
 
   return (
     <>
@@ -56,20 +69,73 @@ export default function PendingPage() {
         <h1>Pending / debts</h1>
       </header>
 
-      <p style={{ padding: '0 16px', color: 'var(--muted)', fontSize: '0.9rem' }}>
-        Track money you lent. Balances stay unchanged until you mark a repayment as settled — then it posts as
-        income to the account you choose. Tap a pending row to edit.
+      <p
+        style={{
+          padding: '0 16px',
+          color: 'var(--muted)',
+          fontSize: '0.9rem',
+        }}
+      >
+        Track money you lent. Balances stay unchanged until you mark a repayment
+        as settled — then it posts as income to the account you choose. Tap a
+        pending row to edit.
       </p>
 
-      {err && <p style={{ color: 'var(--expense)', padding: '0 16px' }}>{err}</p>}
+      {/* ✅ NEW: Total Pending UI */}
+      <div
+        style={{
+          margin: '12px 16px',
+          padding: '12px 16px',
+          borderRadius: 12,
+          background: 'var(--card)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          border: '1px solid var(--border)',
+        }}
+      >
+        <div style={{ fontSize: '0.9rem', color: 'var(--muted)' }}>
+          Total pending
+        </div>
+        <div
+          style={{
+            fontSize: '1.2rem',
+            fontWeight: 600,
+            color: 'var(--pending)',
+          }}
+        >
+          {formatMoney(totalPendingAmount)}
+        </div>
+      </div>
 
-      <h2 style={{ padding: '0 16px', fontSize: '1rem', color: 'var(--pending)' }}>Pending</h2>
+      {err && (
+        <p style={{ color: 'var(--expense)', padding: '0 16px' }}>
+          {err}
+        </p>
+      )}
+
+      <h2
+        style={{
+          padding: '0 16px',
+          fontSize: '1rem',
+          color: 'var(--pending)',
+        }}
+      >
+        Pending
+      </h2>
+
       {pending.length === 0 ? (
-        <p className="empty">No pending debts. Use the + button on Home to add one.</p>
+        <p className="empty">
+          No pending debts. Use the + button on Home to add one.
+        </p>
       ) : (
         <ul className="tx-list">
           {pending.map((p) => (
-            <li key={p._id} className="tx-row" style={{ gridTemplateColumns: '1fr auto' }}>
+            <li
+              key={p._id}
+              className="tx-row"
+              style={{ gridTemplateColumns: '1fr auto' }}
+            >
               <button
                 type="button"
                 onClick={() => setEditing(p._id)}
@@ -89,23 +155,43 @@ export default function PendingPage() {
                   {p.note ? ` · ${p.note}` : ''}
                 </div>
               </button>
+
               <div style={{ textAlign: 'right' }}>
-                <div className="tx-amount" style={{ color: 'var(--pending)' }}>
+                <div
+                  className="tx-amount"
+                  style={{ color: 'var(--pending)' }}
+                >
                   {formatMoney(p.amount)}
                 </div>
-                <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', marginTop: 8, flexWrap: 'wrap' }}>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 6,
+                    justifyContent: 'flex-end',
+                    marginTop: 8,
+                    flexWrap: 'wrap',
+                  }}
+                >
                   <button
                     type="button"
                     className="btn btn-ghost"
-                    style={{ padding: '8px 12px', fontSize: '0.85rem' }}
+                    style={{
+                      padding: '8px 12px',
+                      fontSize: '0.85rem',
+                    }}
                     onClick={() => setEditing(p._id)}
                   >
                     Edit
                   </button>
+
                   <button
                     type="button"
                     className="btn btn-primary"
-                    style={{ padding: '8px 12px', fontSize: '0.85rem' }}
+                    style={{
+                      padding: '8px 12px',
+                      fontSize: '0.85rem',
+                    }}
                     onClick={() => {
                       setSettling(p._id);
                       setAccountId(accounts[0]?._id || '');
@@ -120,7 +206,16 @@ export default function PendingPage() {
         </ul>
       )}
 
-      <h2 style={{ padding: '16px 16px 0', fontSize: '1rem', color: 'var(--muted)' }}>Settled</h2>
+      <h2
+        style={{
+          padding: '16px 16px 0',
+          fontSize: '1rem',
+          color: 'var(--muted)',
+        }}
+      >
+        Settled
+      </h2>
+
       {settled.length === 0 ? (
         <p className="empty" style={{ paddingTop: 16 }}>
           No settled records yet.
@@ -135,7 +230,11 @@ export default function PendingPage() {
                   {formatDay(p.date)} · {p.category}
                 </div>
               </div>
-              <div className="tx-amount" style={{ color: 'var(--pending-muted)' }}>
+
+              <div
+                className="tx-amount"
+                style={{ color: 'var(--pending-muted)' }}
+              >
                 {formatMoney(p.amount)}
               </div>
             </li>
@@ -144,16 +243,36 @@ export default function PendingPage() {
       )}
 
       {settling && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setSettling(null)}>
-          <div className="modal" role="dialog" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onClick={() => setSettling(null)}
+        >
+          <div
+            className="modal"
+            role="dialog"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2>Settle repayment</h2>
-            <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
+
+            <p
+              style={{
+                color: 'var(--muted)',
+                fontSize: '0.9rem',
+              }}
+            >
               Record income for this repayment into:
             </p>
+
             <form onSubmit={doSettle}>
               <div className="field">
                 <label className="label">Account</label>
-                <select className="input" value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+
+                <select
+                  className="input"
+                  value={accountId}
+                  onChange={(e) => setAccountId(e.target.value)}
+                >
                   {accounts.map((a) => (
                     <option key={a._id} value={a._id}>
                       {a.name} ({formatMoney(a.balance)})
@@ -161,10 +280,16 @@ export default function PendingPage() {
                   ))}
                 </select>
               </div>
+
               <div className="modal-actions">
-                <button type="button" className="btn btn-ghost" onClick={() => setSettling(null)}>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => setSettling(null)}
+                >
                   Cancel
                 </button>
+
                 <button type="submit" className="btn btn-primary">
                   Confirm
                 </button>
