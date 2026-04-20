@@ -56,8 +56,8 @@ export default function Dashboard() {
   const [modal, setModal] = useState(null);
   const [editTx, setEditTx] = useState(null);
   const [err, setErr] = useState('');
-  const [incomeHidden, setIncomeHidden] = useState(false);
-  const [netHidden, setNetHidden] = useState(false);
+  const [incomeHidden, setIncomeHidden] = useState(true);
+  const [netHidden, setNetHidden] = useState(true);
 
   const loadMeta = useCallback(async () => {
     const [accs, cats] = await Promise.all([api.accounts(), api.categories()]);
