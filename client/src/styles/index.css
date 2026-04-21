@@ -298,6 +298,14 @@ button {
   color: var(--muted);
 }
 
+.app-version-loading {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
 .bottom-nav {
   position: fixed;
   left: 0;
@@ -989,6 +997,13 @@ html[data-theme='light'] .export-spinner {
   font-size: 0.82rem;
   color: var(--muted);
   line-height: 1.45;
+}
+
+.profile-app-version {
+  margin-top: 14px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-align: center;
 }
 
 .profile-logout {

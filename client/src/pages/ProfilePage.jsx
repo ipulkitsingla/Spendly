@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { formatMonthLong } from '../utils/dates.js';
 import { monthKey, shiftMonth } from '../utils/format.js';
 import { downloadMonthStatementPdf } from '../utils/pdfExport.js';
+import { APP_VERSION } from '../utils/appMeta.js';
 
 export default function ProfilePage() {
   const { user, logout, updateEmailPreferences } = useAuth();
@@ -266,6 +267,7 @@ export default function ProfilePage() {
           <button type="button" className="btn btn-ghost profile-logout" onClick={() => logout()}>
             Log out
           </button>
+          <div className="profile-app-version">App version {APP_VERSION}</div>
         </div>
       </div>
     </>

@@ -10,6 +10,7 @@ import AccountsPage from './pages/AccountsPage.jsx';
 import PendingPage from './pages/PendingPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import ThemeToggle from './components/ThemeToggle.jsx';
+import { APP_VERSION } from './utils/appMeta.js';
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -17,6 +18,7 @@ function Protected({ children }) {
     return (
       <div className="auth-screen">
         <p style={{ textAlign: 'center', color: 'var(--muted)' }}>Loading…</p>
+        <p className="app-version-loading">{APP_VERSION}</p>
       </div>
     );
   }
