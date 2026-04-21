@@ -42,8 +42,22 @@ html[data-theme='light'] .glass-bleed {
 
 html[data-theme='light'] .card {
   box-shadow:
-    0 8px 32px rgba(15, 23, 42, 0.07),
+    0 12px 30px rgba(15, 23, 42, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+html[data-theme='light'] .btn-primary {
+  box-shadow:
+    0 12px 26px rgba(21, 128, 61, 0.2),
+    0 0 0 1px rgba(34, 197, 94, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32);
+}
+
+html[data-theme='light'] .btn-primary:hover {
+  box-shadow:
+    0 16px 30px rgba(21, 128, 61, 0.24),
+    0 0 16px rgba(34, 197, 94, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
 }
 
 html[data-theme='light'] .btn-ghost {
@@ -99,7 +113,7 @@ html[data-theme='light'] .swipe-row-wrap:not(.swipe-row-wrap--open) .swipe-act-d
 
 html[data-theme='light'] .balance-masthead {
   box-shadow:
-    0 20px 56px rgba(15, 23, 42, 0.08),
+    0 24px 52px rgba(15, 23, 42, 0.09),
     inset 0 1px 0 rgba(255, 255, 255, 0.95);
   border-color: rgba(15, 23, 42, 0.08);
 }

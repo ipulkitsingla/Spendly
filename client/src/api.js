@@ -131,6 +131,8 @@ export const api = {
     return rawRequest('/api/auth/login', { method: 'POST', body: JSON.stringify(body) });
   },
   me: () => rawRequest('/api/auth/me'),
+  updateEmailPreferences: (body) =>
+    rawRequest('/api/auth/email-preferences', { method: 'PATCH', body: JSON.stringify(body) }),
   accounts: () => request('/api/accounts'),
   createAccount: async (body) => {
     if (browserOnline()) {

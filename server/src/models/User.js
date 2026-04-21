@@ -29,6 +29,12 @@ const userSchema = new mongoose.Schema(
           'Other',
         ].map((name) => ({ name, isCustom: false })),
     },
+    emailPreferences: {
+      monthlyStatement: { type: Boolean, default: true },
+      expenseReminder: { type: Boolean, default: true },
+      pendingDebtReminder: { type: Boolean, default: true },
+      welcomeSignup: { type: Boolean, default: true },
+    },
   },
   { timestamps: true }
 );

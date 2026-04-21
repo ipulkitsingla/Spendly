@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import Account from '../models/Account.js';
 import { authRequired, JWT_SECRET } from '../middleware/auth.js';
+import { triggerWelcomeEmail } from '../services/reminderScheduler.js';
 
 const router = Router();
 
@@ -37,6 +38,11 @@ router.post('/register', async (req, res) => {
     res.status(201).json({
       token,
       user: { id: user._id, name: user.name, email: user.email },
+    });
+    triggerWelcomeEmail({
+      name: user.name,
+      email: user.email,
+      emailPreferences: user.emailPreferences,
     });
   } catch (err) {
     console.error(err);
@@ -73,6 +79,25 @@ router.get('/me', authRequired, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to load profile' });
+  }
+});
+
+router.patch('/email-preferences', authRequired, async (req, res) => {
+  try {
+    const allowed = ['monthlyStatement', 'expenseReminder', 'pendingDebtReminder', 'welcomeSignup'];
+    const payload = {};
+    for (const key of allowed) {
+      if (key in req.body) payload[`emailPreferences.${key}`] = Boolean(req.body[key]);
+    }
+    if (!Object.keys(payload).length) {
+      return res.status(400).json({ message: 'Provide at least one preference to update' });
+    }
+    const user = await User.findByIdAndUpdate(req.userId, { $set: payload }, { new: true }).select('-passwordHash');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json({ emailPreferences: user.emailPreferences });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to update email preferences' });
   }
 });
 

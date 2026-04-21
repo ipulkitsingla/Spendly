@@ -29,6 +29,20 @@ function clearCachedUser() {
   localStorage.removeItem(USER_CACHE_KEY);
 }
 
+function normalizeProfile(u) {
+  return {
+    id: u._id || u.id,
+    name: u.name,
+    email: u.email,
+    emailPreferences: {
+      monthlyStatement: u?.emailPreferences?.monthlyStatement !== false,
+      expenseReminder: u?.emailPreferences?.expenseReminder !== false,
+      pendingDebtReminder: u?.emailPreferences?.pendingDebtReminder !== false,
+      welcomeSignup: u?.emailPreferences?.welcomeSignup !== false,
+    },
+  };
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -42,7 +56,7 @@ export function AuthProvider({ children }) {
     api
       .me()
       .then((u) => {
-        const profile = { id: u._id || u.id, name: u.name, email: u.email };
+        const profile = normalizeProfile(u);
         writeCachedUser(profile);
         setUser(profile);
       })
@@ -69,7 +83,8 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     const data = await api.login({ email, password });
     localStorage.setItem('spendly_token', data.token);
-    const profile = { id: data.user.id, name: data.user.name, email: data.user.email };
+    const me = await api.me();
+    const profile = normalizeProfile(me);
     writeCachedUser(profile);
     setUser(profile);
     return data;
@@ -78,9 +93,27 @@ export function AuthProvider({ children }) {
   const register = async (name, email, password) => {
     const data = await api.register({ name, email, password });
     localStorage.setItem('spendly_token', data.token);
-    const profile = { id: data.user.id, name: data.user.name, email: data.user.email };
+    const me = await api.me();
+    const profile = normalizeProfile(me);
     writeCachedUser(profile);
     setUser(profile);
+    return data;
+  };
+
+  const updateEmailPreferences = async (patch) => {
+    const data = await api.updateEmailPreferences(patch);
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = {
+        ...prev,
+        emailPreferences: {
+          ...prev.emailPreferences,
+          ...data.emailPreferences,
+        },
+      };
+      writeCachedUser(next);
+      return next;
+    });
     return data;
   };
 
@@ -91,7 +124,9 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateEmailPreferences }}>
+      {children}
+    </AuthContext.Provider>
   );
 }
 

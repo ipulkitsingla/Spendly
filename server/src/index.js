@@ -8,6 +8,7 @@ import transactionRoutes from './routes/transactions.js';
 import pendingRoutes from './routes/pending.js';
 import categoryRoutes from './routes/categories.js';
 import statsRoutes from './routes/stats.js';
+import { startReminderScheduler } from './services/reminderScheduler.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -38,6 +39,7 @@ app.get('/api/health', (_, res) => res.json({ ok: true }));
 mongoose
   .connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/spendly')
   .then(() => {
+    startReminderScheduler();
     app.listen(PORT, () => {
       console.log(`Spendly API listening on http://localhost:${PORT}`);
     });

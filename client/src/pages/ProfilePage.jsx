@@ -6,12 +6,14 @@ import { monthKey, shiftMonth } from '../utils/format.js';
 import { downloadMonthStatementPdf } from '../utils/pdfExport.js';
 
 export default function ProfilePage() {
-  const { user, logout } = useAuth();
+  const { user, logout, updateEmailPreferences } = useAuth();
   const [accounts, setAccounts] = useState([]);
   const [exportMonth, setExportMonth] = useState(() => monthKey());
   const [exportAccountId, setExportAccountId] = useState('');
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfErr, setPdfErr] = useState('');
+  const [emailPrefSaving, setEmailPrefSaving] = useState('');
+  const [emailPrefErr, setEmailPrefErr] = useState('');
 
   useEffect(() => {
     api
@@ -49,6 +51,29 @@ export default function ProfilePage() {
       setPdfLoading(false);
     }
   }, [exportMonth, exportAccountId, user, scopeLabel]);
+
+  const emailPrefs = user?.emailPreferences || {
+    monthlyStatement: true,
+    expenseReminder: true,
+    pendingDebtReminder: true,
+    welcomeSignup: true,
+  };
+
+  const onTogglePref = useCallback(
+    async (key) => {
+      const next = !emailPrefs[key];
+      setEmailPrefErr('');
+      setEmailPrefSaving(key);
+      try {
+        await updateEmailPreferences({ [key]: next });
+      } catch (e) {
+        setEmailPrefErr(e?.message || 'Could not update email preferences.');
+      } finally {
+        setEmailPrefSaving('');
+      }
+    },
+    [emailPrefs, updateEmailPreferences]
+  );
 
   return (
     <>
@@ -170,6 +195,72 @@ export default function ProfilePage() {
         </section>
 
         <div className="card profile-settings-card">
+          <h2 className="profile-section-title">Email notifications</h2>
+          <p className="profile-hint">Control monthly statements, reminders, and welcome emails for this account.</p>
+          <div className="profile-email-prefs">
+            <button
+              type="button"
+              className="profile-pref-row"
+              onClick={() => onTogglePref('monthlyStatement')}
+              disabled={emailPrefSaving === 'monthlyStatement'}
+            >
+              <div>
+                <strong>Monthly statement (1st day)</strong>
+                <span>Receive statement email with PDF attachment.</span>
+              </div>
+              <span className={`profile-pref-pill ${emailPrefs.monthlyStatement ? 'on' : 'off'}`}>
+                {emailPrefSaving === 'monthlyStatement' ? 'Saving...' : emailPrefs.monthlyStatement ? 'On' : 'Off'}
+              </span>
+            </button>
+            <button
+              type="button"
+              className="profile-pref-row"
+              onClick={() => onTogglePref('expenseReminder')}
+              disabled={emailPrefSaving === 'expenseReminder'}
+            >
+              <div>
+                <strong>Expense reminder (9PM)</strong>
+                <span>Daily reminder to add today&apos;s expenses.</span>
+              </div>
+              <span className={`profile-pref-pill ${emailPrefs.expenseReminder ? 'on' : 'off'}`}>
+                {emailPrefSaving === 'expenseReminder' ? 'Saving...' : emailPrefs.expenseReminder ? 'On' : 'Off'}
+              </span>
+            </button>
+            <button
+              type="button"
+              className="profile-pref-row"
+              onClick={() => onTogglePref('pendingDebtReminder')}
+              disabled={emailPrefSaving === 'pendingDebtReminder'}
+            >
+              <div>
+                <strong>Pending debt reminder (10PM)</strong>
+                <span>Daily reminder when there are pending debts.</span>
+              </div>
+              <span className={`profile-pref-pill ${emailPrefs.pendingDebtReminder ? 'on' : 'off'}`}>
+                {emailPrefSaving === 'pendingDebtReminder' ? 'Saving...' : emailPrefs.pendingDebtReminder ? 'On' : 'Off'}
+              </span>
+            </button>
+            <button
+              type="button"
+              className="profile-pref-row"
+              onClick={() => onTogglePref('welcomeSignup')}
+              disabled={emailPrefSaving === 'welcomeSignup'}
+            >
+              <div>
+                <strong>Welcome signup email</strong>
+                <span>Receive welcome email after account registration.</span>
+              </div>
+              <span className={`profile-pref-pill ${emailPrefs.welcomeSignup ? 'on' : 'off'}`}>
+                {emailPrefSaving === 'welcomeSignup' ? 'Saving...' : emailPrefs.welcomeSignup ? 'On' : 'Off'}
+              </span>
+            </button>
+          </div>
+          {emailPrefErr && (
+            <p className="profile-email-err" role="alert">
+              {emailPrefErr}
+            </p>
+          )}
+
           <h2 className="profile-section-title">Session</h2>
           <p className="profile-hint">Sign out on this device. You will need your password to sign in again.</p>
           <button type="button" className="btn btn-ghost profile-logout" onClick={() => logout()}>
