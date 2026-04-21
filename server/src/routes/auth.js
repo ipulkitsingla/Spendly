@@ -35,14 +35,18 @@ router.post('/register', async (req, res) => {
       }))
     );
     const token = jwt.sign({ userId: user._id.toString() }, JWT_SECRET, { expiresIn: '7d' });
+    try {
+      await triggerWelcomeEmail({
+        name: user.name,
+        email: user.email,
+        emailPreferences: user.emailPreferences,
+      });
+    } catch {
+      // Registration should still succeed even if email provider is down.
+    }
     res.status(201).json({
       token,
       user: { id: user._id, name: user.name, email: user.email },
-    });
-    triggerWelcomeEmail({
-      name: user.name,
-      email: user.email,
-      emailPreferences: user.emailPreferences,
     });
   } catch (err) {
     console.error(err);

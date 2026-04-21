@@ -24,10 +24,21 @@ function getTransporter() {
   return transporter;
 }
 
+export async function verifyMailerConnection() {
+  if (!emailEnabled()) return { ok: false, reason: 'missing_env' };
+  try {
+    const t = getTransporter();
+    await t.verify();
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, reason: error?.message || 'verify_failed' };
+  }
+}
+
 export async function sendEmail({ to, subject, html, text, attachments }) {
   if (!emailEnabled()) return { skipped: true };
   const t = getTransporter();
-  await t.sendMail({
+  const info = await t.sendMail({
     from: EMAIL_FROM,
     to,
     subject,
@@ -35,7 +46,7 @@ export async function sendEmail({ to, subject, html, text, attachments }) {
     text,
     attachments: Array.isArray(attachments) ? attachments : undefined,
   });
-  return { skipped: false };
+  return { skipped: false, messageId: info?.messageId || null };
 }
 
 export function formatInr(value) {

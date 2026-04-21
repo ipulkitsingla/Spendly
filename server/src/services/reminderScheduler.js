@@ -2,7 +2,7 @@ import cron from 'node-cron';
 import User from '../models/User.js';
 import PendingTransaction from '../models/PendingTransaction.js';
 import EmailDispatchLog from '../models/EmailDispatchLog.js';
-import { sendEmail, emailEnabled, formatInr } from './mailer.js';
+import { sendEmail, emailEnabled, formatInr, verifyMailerConnection } from './mailer.js';
 import { buildMonthlyStatement } from './monthlyStatement.js';
 import { buildStatementPdfBuffer } from './statementPdf.js';
 
@@ -164,12 +164,15 @@ async function runMonthlyStatementEmail() {
   }
 }
 
-export function triggerWelcomeEmail(user) {
+export async function triggerWelcomeEmail(user) {
   if (!emailEnabled() || !user?.email) return;
   if (user?.emailPreferences?.welcomeSignup === false) return;
-  sendWelcomeEmail(user).catch((e) => {
+  try {
+    await sendWelcomeEmail(user);
+  } catch (e) {
     console.error(`Failed welcome email for ${user.email}:`, e.message);
-  });
+    throw e;
+  }
 }
 
 export function startReminderScheduler() {
@@ -178,17 +181,37 @@ export function startReminderScheduler() {
     return;
   }
 
-  cron.schedule('0 21 * * *', () => {
-    runExpenseReminder().catch((e) => console.error('Expense reminder job failed:', e.message));
-  }, { timezone: REMINDER_TIMEZONE });
+  verifyMailerConnection().then((status) => {
+    if (!status.ok) {
+      console.warn(`SMTP verify failed: ${status.reason}`);
+    } else {
+      console.log('SMTP connection verified.');
+    }
+  });
 
-  cron.schedule('0 22 * * *', () => {
-    runPendingDebtReminder().catch((e) => console.error('Pending debt reminder job failed:', e.message));
-  }, { timezone: REMINDER_TIMEZONE });
+  cron.schedule(
+    '0 21 * * *',
+    () => {
+      runExpenseReminder().catch((e) => console.error('Expense reminder job failed:', e.message));
+    },
+    { timezone: REMINDER_TIMEZONE }
+  );
 
-  cron.schedule('0 9 1 * *', () => {
-    runMonthlyStatementEmail().catch((e) => console.error('Monthly statement job failed:', e.message));
-  }, { timezone: REMINDER_TIMEZONE });
+  cron.schedule(
+    '0 22 * * *',
+    () => {
+      runPendingDebtReminder().catch((e) => console.error('Pending debt reminder job failed:', e.message));
+    },
+    { timezone: REMINDER_TIMEZONE }
+  );
+
+  cron.schedule(
+    '0 9 1 * *',
+    () => {
+      runMonthlyStatementEmail().catch((e) => console.error('Monthly statement job failed:', e.message));
+    },
+    { timezone: REMINDER_TIMEZONE }
+  );
 
   console.log(`Email reminder scheduler started in timezone ${REMINDER_TIMEZONE}`);
 }
