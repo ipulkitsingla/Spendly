@@ -32,6 +32,15 @@ function dayPeriodKey(date = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
+function hourInTz(date = new Date()) {
+  const value = new Intl.DateTimeFormat('en-US', {
+    timeZone: REMINDER_TIMEZONE,
+    hour: '2-digit',
+    hour12: false,
+  }).format(date);
+  return Number(value);
+}
+
 async function wasSent(userId, kind, periodKey) {
   const row = await EmailDispatchLog.findOne({ userId, kind, periodKey }).lean();
   return Boolean(row);
@@ -164,6 +173,20 @@ async function runMonthlyStatementEmail() {
   }
 }
 
+async function runStartupCatchup() {
+  try {
+    const hr = hourInTz();
+    if (hr >= 18) {
+      await runExpenseReminder();
+    }
+    if (hr >= 18) {
+      await runPendingDebtReminder();
+    }
+  } catch (e) {
+    console.error('Startup reminder catch-up failed:', e.message);
+  }
+}
+
 export async function triggerWelcomeEmail(user) {
   if (!emailEnabled() || !user?.email) return;
   if (user?.emailPreferences?.welcomeSignup === false) return;
@@ -186,6 +209,7 @@ export function startReminderScheduler() {
       console.warn(`SMTP verify failed: ${status.reason}`);
     } else {
       console.log('SMTP connection verified.');
+      runStartupCatchup().catch(() => {});
     }
   });
 
