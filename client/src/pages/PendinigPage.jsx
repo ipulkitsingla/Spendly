@@ -140,8 +140,8 @@ export default function PendingPage() {
         <h1>Pending / debts</h1>
       </header>
 
-      <p style={{ padding: '0 16px', color: 'var(--muted)', fontSize: '0.9rem' }}>
-        Track money you lent. Mark repayments as settled to post income.
+      <p style={{ padding: '0 16px', color: 'var(--muted)', fontSize: '0.9rem', lineHeight: 1.45 }}>
+        Track money you lent. Mark repayments as settled to post income, and use partial settle when only part is paid.
       </p>
 
       <div
@@ -163,24 +163,78 @@ export default function PendingPage() {
 
       {err && <p style={{ color: 'var(--expense)', padding: '0 16px' }}>{err}</p>}
 
-      <h2 style={{ padding: '0 16px', color: 'var(--pending)' }}>Pending</h2>
+      <h2 style={{ padding: '0 16px', color: 'var(--pending)', fontSize: '1rem' }}>Pending</h2>
 
       {pending.length === 0 ? (
         <p className="empty">No pending debts.</p>
       ) : (
         <ul className="tx-list">
           {pending.map((p) => (
-            <li key={p._id} className="tx-row">
-              <button onClick={() => setEditing(p._id)}>
-                <div>{p.personName}</div>
-                <div>
+            <li key={p._id} className="tx-row" style={{ gridTemplateColumns: '1fr auto', gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => setEditing(p._id)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'inherit',
+                  padding: 0,
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <div className="tx-title">{p.personName}</div>
+                <div className="tx-meta">
                   {formatDay(p.date)} · {p.category}
+                  {p.note ? ` · ${p.note}` : ''}
                 </div>
               </button>
 
+              <div style={{ textAlign: 'right' }}>
+                <div className="tx-amount" style={{ color: 'var(--pending)' }}>
+                  {formatMoney(p.amount)}
+                </div>
+                <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end', gap: 6, flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    style={{ padding: '8px 12px', fontSize: '0.82rem' }}
+                    onClick={() => setEditing(p._id)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    style={{ padding: '8px 12px', fontSize: '0.82rem' }}
+                    onClick={() => openSettle(p)}
+                  >
+                    Settle
+                  </button>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <h2 style={{ padding: '16px 16px 0', color: 'var(--muted)', fontSize: '1rem' }}>Settled</h2>
+      {settled.length === 0 ? (
+        <p className="empty" style={{ paddingTop: 16 }}>
+          No settled records yet.
+        </p>
+      ) : (
+        <ul className="tx-list">
+          {settled.map((p) => (
+            <li key={p._id} className="tx-row">
               <div>
-                <div>{formatMoney(p.amount)}</div>
-                <button onClick={() => openSettle(p)}>Settle</button>
+                <div className="tx-title">{p.personName}</div>
+                <div className="tx-meta">
+                  {formatDay(p.date)} · {p.category}
+                </div>
+              </div>
+              <div className="tx-amount" style={{ color: 'var(--pending-muted)' }}>
+                {formatMoney(p.amount)}
               </div>
             </li>
           ))}
@@ -188,37 +242,70 @@ export default function PendingPage() {
       )}
 
       {settling && (
-        <div className="modal-backdrop" onClick={closeSettle}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-backdrop" role="presentation" onClick={closeSettle}>
+          <div className="modal" role="dialog" onClick={(e) => e.stopPropagation()}>
             <h2>Settle repayment</h2>
+            <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
+              Outstanding: <strong style={{ color: 'var(--pending)' }}>{formatMoney(settling.amount)}</strong> from{' '}
+              <strong>{settling.personName}</strong>
+            </p>
 
             <form onSubmit={doSettle}>
-              <input
-                type="number"
-                value={settleAmount}
-                onChange={(e) => setSettleAmount(e.target.value)}
-              />
+              <div className="field">
+                <label className="label">Amount to settle</label>
+                <input
+                  className="input"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  max={settling.amount}
+                  value={settleAmount}
+                  onChange={(e) => {
+                    setSettleAmount(e.target.value);
+                    setSettleAmountErr('');
+                  }}
+                  placeholder={`Max ${formatMoney(settling.amount)}`}
+                />
+                {settleAmountErr && (
+                  <p style={{ color: 'var(--expense)', fontSize: '0.82rem', marginTop: 4 }}>{settleAmountErr}</p>
+                )}
+              </div>
 
               {isPartialSettle && (
-                <p>
-                  Remaining: {formatMoney(remainingAfterSettle)}
-                </p>
+                <div
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--muted)',
+                    marginBottom: 12,
+                    fontSize: '0.85rem',
+                  }}
+                >
+                  Partial settlement - remaining pending: <strong style={{ color: 'var(--pending)' }}>{formatMoney(remainingAfterSettle)}</strong>
+                </div>
               )}
 
-              <select
-                value={accountId}
-                onChange={(e) => setAccountId(e.target.value)}
-              >
-                {accounts.map((a) => (
-                  <option key={a._id} value={a._id}>
-                    {a.name}
-                  </option>
-                ))}
-              </select>
+              <div className="field">
+                <label className="label">Post income to account</label>
+                <select className="input" value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+                  {accounts.map((a) => (
+                    <option key={a._id} value={a._id}>
+                      {a.name} ({formatMoney(a.balance)})
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              <button type="submit">
-                {isPartialSettle ? 'Settle partial' : 'Confirm'}
-              </button>
+              <div className="modal-actions">
+                <button type="button" className="btn btn-ghost" onClick={closeSettle}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  {isPartialSettle ? 'Settle partial' : 'Confirm'}
+                </button>
+              </div>
             </form>
           </div>
         </div>
