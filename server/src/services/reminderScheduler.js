@@ -103,20 +103,46 @@ async function runPendingDebtReminder() {
     if (user.emailPreferences?.pendingDebtReminder === false) continue;
     if (await wasSent(user._id, 'daily_pending_reminder', periodKey)) continue;
     try {
-      const pendingCount = await PendingTransaction.countDocuments({ userId: user._id, status: 'pending' });
+      const pendingData = await PendingTransaction.aggregate([
+        {
+          $match: {
+            userId: user._id,
+            status: 'pending'
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            totalAmount: { $sum: '$amount' },
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+
+      const pendingCount = pendingData[0]?.count || 0;
+      const totalAmount = pendingData[0]?.totalAmount || 0;
       if (!pendingCount) continue;
       await sendEmail({
         to: user.email,
         subject: '10PM reminder: Review pending debts',
-        text: `Hi ${user.name}, you still have ${pendingCount} pending debt item(s) in Spendly.`,
+        text: `Hi ${user.name}, you have ${pendingCount} pending item(s) with total amount ₹${totalAmount}.`,
         html: `
-          <div style="font-family:Arial,sans-serif;line-height:1.5;color:#0f172a">
-            <h3 style="margin:0 0 10px">Hi ${user.name},</h3>
-            <p style="margin:0 0 10px">You currently have <strong>${pendingCount}</strong> pending debt item(s).</p>
-            <p style="margin:0 0 10px">Please review and settle/update them in Spendly.</p>
-            <p style="margin:0;color:#64748b;font-size:13px">Spendly debt reminder</p>
-          </div>
-        `,
+  <div style="font-family:Arial,sans-serif;line-height:1.5;color:#0f172a">
+    <h3 style="margin:0 0 10px">Hi ${user.name},</h3>
+    <p style="margin:0 0 10px">
+      You currently have <strong>${pendingCount}</strong> pending debt item(s).
+    </p>
+    <p style="margin:0 0 10px">
+      Total pending amount: <strong>${formatInr(totalAmount)}</strong>
+    </p>
+    <p style="margin:0 0 10px">
+      Please review and settle/update them in Spendly.
+    </p>
+    <p style="margin:0;color:#64748b;font-size:13px">
+      Spendly debt reminder
+    </p>
+  </div>
+`,
       });
       await markSent(user._id, 'daily_pending_reminder', periodKey);
     } catch (e) {
@@ -209,7 +235,7 @@ export function startReminderScheduler() {
       console.warn(`SMTP verify failed: ${status.reason}`);
     } else {
       console.log('SMTP connection verified.');
-      runStartupCatchup().catch(() => {});
+      runStartupCatchup().catch(() => { });
     }
   });
 
