@@ -159,4 +159,74 @@ router.post('/:id/settle', async (req, res) => {
   }
 });
 
+/** Partial settle: record part income and keep remainder pending */
+router.post('/:id/settle-partial', async (req, res) => {
+  try {
+    const { accountId, amount } = req.body;
+    const numAmount = Number(amount);
+    if (!accountId) {
+      return res.status(400).json({ message: 'accountId is required to receive repayment' });
+    }
+    if (Number.isNaN(numAmount) || numAmount <= 0) {
+      return res.status(400).json({ message: 'amount must be greater than 0' });
+    }
+
+    const pending = await PendingTransaction.findOne({
+      _id: req.params.id,
+      userId: req.userId,
+      status: 'pending',
+    });
+    if (!pending) {
+      return res.status(404).json({ message: 'Pending transaction not found or already settled' });
+    }
+    if (numAmount > pending.amount) {
+      return res.status(400).json({ message: 'amount cannot exceed pending balance' });
+    }
+
+    const account = await Account.findOne({ _id: accountId, userId: req.userId });
+    if (!account) {
+      return res.status(404).json({ message: 'Account not found' });
+    }
+
+    const tx = await Transaction.create({
+      userId: req.userId,
+      type: 'income',
+      amount: numAmount,
+      category: pending.category || 'Debt',
+      accountId: account._id,
+      date: new Date(),
+      note: pending.note
+        ? `Partial repayment from ${pending.personName}: ${pending.note}`
+        : `Partial repayment from ${pending.personName}`,
+      balanceAfterTransaction: 0,
+      balanceAccountId: account._id,
+    });
+
+    try {
+      await recalculateAllBalances(req.userId);
+    } catch (e) {
+      await Transaction.deleteOne({ _id: tx._id });
+      if (e instanceof NegativeBalanceError) {
+        return res.status(400).json({ message: negativeBalanceMessage(e) });
+      }
+      throw e;
+    }
+
+    const remaining = Number(pending.amount) - numAmount;
+    if (remaining <= 0) {
+      pending.amount = 0;
+      pending.status = 'settled';
+      pending.settledTransactionId = tx._id;
+    } else {
+      pending.amount = remaining;
+    }
+    await pending.save();
+
+    res.json({ pending, transaction: tx, partial: remaining > 0, remainingAmount: Math.max(0, remaining) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to partially settle pending transaction' });
+  }
+});
+
 export default router;

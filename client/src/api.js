@@ -277,6 +277,25 @@ export const api = {
     await refreshAccountsFromServer();
     return data;
   },
+  settlePartialPending: async (id, accountId, amount) => {
+    if (!browserOnline()) {
+      throw new Error('Connect to the internet to settle a debt (the server posts the income).');
+    }
+    const data = await rawRequest(`/api/pending/${id}/settle-partial`, {
+      method: 'POST',
+      body: JSON.stringify({ accountId, amount: Number(amount) }),
+    });
+    const list = await cacheGet('pending:list');
+    if (Array.isArray(list) && data?.pending) {
+      await cachePut(
+        'pending:list',
+        list.map((p) => (String(p._id) === String(data.pending._id) ? data.pending : p))
+      );
+    }
+    if (data?.transaction?.date) await invalidateBundlesForMonth(monthStrFromTxDate(data.transaction.date));
+    await refreshAccountsFromServer();
+    return data;
+  },
   patchPending: async (id, body) => {
     if (browserOnline()) {
       try {

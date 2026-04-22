@@ -176,10 +176,10 @@ async function runMonthlyStatementEmail() {
 async function runStartupCatchup() {
   try {
     const hr = hourInTz();
-    if (hr >= 18) {
+    if (hr >= 21) {
       await runExpenseReminder();
     }
-    if (hr >= 18) {
+    if (hr >= 22) {
       await runPendingDebtReminder();
     }
   } catch (e) {
