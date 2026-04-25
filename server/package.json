@@ -6,7 +6,10 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "build": "npm install"
+    "build": "npm install",
+    "job:expense-reminder": "node src/jobs/expenseReminderJob.js",
+    "job:pending-reminder": "node src/jobs/pendingReminderJob.js",
+    "job:monthly-statement": "node src/jobs/monthlyStatementJob.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

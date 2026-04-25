@@ -9,6 +9,8 @@ import pendingRoutes from './routes/pending.js';
 import categoryRoutes from './routes/categories.js';
 import statsRoutes from './routes/stats.js';
 import whatIfRoutes from './routes/whatIf.js';
+import aiRoutes from './routes/ai.js';
+import cronRoutes from './routes/cron.js';
 import { startReminderScheduler } from './services/reminderScheduler.js';
 
 const app = express();
@@ -35,6 +37,8 @@ app.use('/api/pending', pendingRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/what-if', whatIfRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/cron', cronRoutes);
 
 app.get('/api/health', (_, res) => res.json({ ok: true }));
 
