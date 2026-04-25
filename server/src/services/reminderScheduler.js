@@ -70,7 +70,7 @@ async function sendWelcomeEmail(user) {
   });
 }
 
-async function runExpenseReminder() {
+export async function runExpenseReminder() {
   const periodKey = dayPeriodKey();
   const users = await User.find({}, { name: 1, email: 1, emailPreferences: 1 }).lean();
   const stats = {
@@ -113,7 +113,7 @@ async function runExpenseReminder() {
   return stats;
 }
 
-async function runPendingDebtReminder() {
+export async function runPendingDebtReminder() {
   const periodKey = dayPeriodKey();
   const users = await User.find({}, { name: 1, email: 1, emailPreferences: 1 }).lean();
   const stats = {
@@ -189,7 +189,7 @@ async function runPendingDebtReminder() {
   return stats;
 }
 
-async function runMonthlyStatementEmail() {
+export async function runMonthlyStatementEmail() {
   const statementMonth = prevMonthKey();
   const users = await User.find({}, { name: 1, email: 1, emailPreferences: 1 }).lean();
   const stats = {
