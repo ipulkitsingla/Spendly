@@ -625,6 +625,170 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
+/* Version 3 - Grouped by date (Light Theme inspiration) */
+.tx-group-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin: 0 12px 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  position: relative;
+  z-index: 1;
+}
+
+.tx-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid var(--border);
+}
+
+.tx-group-date {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.tx-group-count {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* Reset SwipeableRow inside grouped cards to avoid double styling */
+.tx-group-card .swipe-row-wrap {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.tx-group-card .swipe-row-panel {
+  background: var(--surface); /* Matches card background */
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Ensure opaque background in light theme to hide action layer */
+html[data-theme='light'] .tx-group-card .swipe-row-panel {
+  background: #ffffff;
+}
+
+/* Hide actions when row is closed to prevent bleed-through in light theme */
+.swipe-row-wrap:not(.swipe-row-wrap--open) .swipe-row-actions {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.swipe-row-wrap.swipe-row-wrap--open .swipe-row-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.tx-row-v3 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  background: inherit;
+}
+
+.tx-row-v3:last-child {
+  border-bottom: none;
+}
+
+.tx-icon-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tx-icon-circle.expense {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fb7185;
+}
+
+.tx-icon-circle.income {
+  background: rgba(34, 197, 94, 0.1);
+  color: #4ade80;
+}
+
+.tx-icon-circle.transfer {
+  background: rgba(59, 130, 246, 0.1);
+  color: #60a5fa;
+}
+
+.tx-icon-circle.balance-update {
+  background: rgba(139, 92, 246, 0.1);
+  color: #a78bfa;
+}
+
+html[data-theme='light'] .tx-icon-circle.expense {
+  background: #fef2f2;
+  color: #e11d48;
+}
+
+html[data-theme='light'] .tx-icon-circle.income {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+html[data-theme='light'] .tx-icon-circle.transfer {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+html[data-theme='light'] .tx-icon-circle.balance-update {
+  background: #f5f3ff;
+  color: #7c3aed;
+}
+
+.tx-v3-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.tx-v3-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.tx-v3-subtitle {
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tx-v3-amt {
+  font-weight: 700;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tx-v3-amt.expense {
+  color: #e11d48;
+}
+
+.tx-v3-amt.income {
+  color: #16a34a;
+}
+
 .month-bar {
   display: flex;
   align-items: center;

@@ -150,6 +150,29 @@ html[data-theme='light'] .pill:not(.active) {
   background: rgba(15, 23, 42, 0.04);
 }
 
+html[data-theme='light'] .tx-group-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.06);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+}
+
+html[data-theme='light'] .tx-group-header {
+  background: rgba(15, 23, 42, 0.01);
+  border-bottom-color: rgba(15, 23, 42, 0.04);
+}
+
+html[data-theme='light'] .tx-row-v3 {
+  border-bottom-color: rgba(15, 23, 42, 0.04);
+}
+
+html[data-theme='light'] .tx-v3-title {
+  color: #1e293b;
+}
+
+html[data-theme='light'] .tx-v3-subtitle {
+  color: #64748b;
+}
+
 html[data-theme='light'] .theme-toggle {
   background: rgba(255, 255, 255, 0.9);
   border-color: rgba(15, 23, 42, 0.1);

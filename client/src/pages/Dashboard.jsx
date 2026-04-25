@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../api.js';
 import { usePrivacy } from '../context/PrivacyContext.jsx';
 import { formatMonthLong } from '../utils/dates.js';
-import { formatDay, formatMoney, monthKey, shiftMonth } from '../utils/format.js';
+import { formatDay, formatGroupDate, formatMoney, formatTxTime, monthKey, shiftMonth } from '../utils/format.js';
 import { categoryIcon } from '../utils/categoryIcons.js';
 import Money from '../components/Money.jsx';
 import QuickAddFab from '../components/QuickAddFab.jsx';
@@ -33,6 +33,16 @@ function txSubtitle(tx, accountsById) {
   }
   const acc = accountsById[String(tx.accountId)]?.name || 'Account';
   return `${day} · ${acc}`;
+}
+
+function groupTxsByDate(txs) {
+  const groups = {};
+  txs.forEach((tx) => {
+    const date = tx.date.split('T')[0];
+    if (!groups[date]) groups[date] = [];
+    groups[date].push(tx);
+  });
+  return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]));
 }
 
 export default function Dashboard() {
@@ -301,80 +311,94 @@ export default function Dashboard() {
       {txs.length === 0 ? (
         <p className="empty">No transactions this month. Tap + to add one.</p>
       ) : (
-        <ul className="tx-list-v2">
-          {txs.map((tx) => {
-            const cls =
-              tx.type === 'income'
-                ? 'type-income'
-                : tx.type === 'expense'
-                  ? 'type-expense'
-                  : tx.type === 'balance_update'
-                    ? 'type-balance-update'
-                    : 'type-transfer';
+        <div style={{ paddingBottom: '88px' }}>
+          {groupTxsByDate(txs).map(([date, dayTxs]) => (
+            <div key={date} className="tx-group-card">
+              <div className="tx-group-header">
+                <span className="tx-group-date">{formatGroupDate(date)}</span>
+                <span className="tx-group-count">
+                  {dayTxs.length} {dayTxs.length === 1 ? 'item' : 'items'}
+                </span>
+              </div>
+              <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                {dayTxs.map((tx) => {
+                  const isExpense = tx.type === 'expense';
+                  const isIncome = tx.type === 'income';
+                  const isTransfer = tx.type === 'transfer';
+                  const isBalUpdate = tx.type === 'balance_update';
 
-            let signPrefix = '';
-            let showAbs = Number(tx.amount);
-            if (tx.type === 'expense') {
-              signPrefix = '−';
-              showAbs = Math.abs(Number(tx.amount));
-            } else if (tx.type === 'income') {
-              signPrefix = '+';
-              showAbs = Math.abs(Number(tx.amount));
-            } else if (tx.type === 'balance_update') {
-              const d = Number(tx.amount);
-              signPrefix = d >= 0 ? '+' : '−';
-              showAbs = Math.abs(d);
-            } else {
-              signPrefix = '';
-              showAbs = Math.abs(Number(tx.amount));
-            }
+                  let signPrefix = '';
+                  let amtCls = '';
+                  let iconCls = '';
+                  let showAbs = Math.abs(Number(tx.amount));
 
-            const icon = categoryIcon(tx.category, tx.type);
-            const rowAccId = tx.runningBalanceAccountId ? String(tx.runningBalanceAccountId) : '';
-            const rowBal =
-              tx.accountRunningBalance != null && !Number.isNaN(Number(tx.accountRunningBalance))
-                ? Number(tx.accountRunningBalance)
-                : Number(tx.runningBalance);
-            const rowAccName = rowAccId ? accountsById[rowAccId]?.name || 'Account' : '';
+                  if (isExpense) {
+                    signPrefix = '−';
+                    amtCls = 'expense';
+                    iconCls = 'expense';
+                  } else if (isIncome) {
+                    signPrefix = '+';
+                    amtCls = 'income';
+                    iconCls = 'income';
+                  } else if (isBalUpdate) {
+                    const d = Number(tx.amount);
+                    signPrefix = d >= 0 ? '+' : '−';
+                    amtCls = d >= 0 ? 'income' : 'expense';
+                    iconCls = 'balance-update';
+                  } else {
+                    iconCls = 'transfer';
+                  }
 
-            return (
-              <li key={tx._id} style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-                <SwipeableRow onEdit={() => setEditTx(tx)} onDelete={() => deleteTx(tx)}>
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    className="tx-row-v2"
-                    onClick={() => setEditTx(tx)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        setEditTx(tx);
-                      }
-                    }}
-                  >
-                    <div className="tx-icon-tile" aria-hidden>
-                      {icon}
-                    </div>
-                    <div className="tx-v2-body">
-                      <div className="tx-v2-title">{txTitle(tx)}</div>
-                      <div className="tx-v2-meta">{txSubtitle(tx, accountsById)}</div>
-                    </div>
-                    <div className="tx-v2-right">
-                      <div className={`tx-v2-amt ${cls}`}>
-                        {signPrefix}
-                        {formatMoney(showAbs)}
-                      </div>
-                      <div className="tx-v2-bal">
-                        bal {formatMoney(rowBal)}
-                        {rowAccName ? ` · ${rowAccName}` : ''}
-                      </div>
-                    </div>
-                  </div>
-                </SwipeableRow>
-              </li>
-            );
-          })}
-        </ul>
+                  const subtitle = `${tx.note || tx.category} · ${formatDay(tx.date)}`;
+
+                  return (
+                    <li key={tx._id}>
+                      <SwipeableRow onEdit={() => setEditTx(tx)} onDelete={() => deleteTx(tx)}>
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          className="tx-row-v3"
+                          onClick={() => setEditTx(tx)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              setEditTx(tx);
+                            }
+                          }}
+                        >
+                          <div className={`tx-icon-circle ${iconCls}`}>
+                            {isIncome ? (
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M7 7l10 10M17 7v10H7" transform="rotate(180 12 12)" />
+                              </svg>
+                            ) : isExpense ? (
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M7 7l10 10M17 7v10H7" />
+                              </svg>
+                            ) : (
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M16 3L21 8L16 13" />
+                                <path d="M21 8H3" />
+                              </svg>
+                            )}
+                          </div>
+                          <div className="tx-v3-body">
+                            <div className="tx-v3-title">{tx.category}</div>
+                            <div className="tx-v3-subtitle">{subtitle}</div>
+                          </div>
+                          <div className={`tx-v3-amt ${amtCls}`}>
+                            {signPrefix}
+                            {formatMoney(showAbs)}
+                          </div>
+                        </div>
+                      </SwipeableRow>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
       )}
 
       <QuickAddFab onPick={setModal} />
