@@ -4,7 +4,7 @@ import { browserOnline } from '../offline/networkState.js';
 import { drainOutbox } from '../offline/sync.js';
 import { outboxCount } from '../offline/store.js';
 import { hapticLight } from '../utils/haptics.js';
-import QuickAddFab from './QuickAddFab.jsx';
+import SpendiAssistant from './SpendiAssistant.jsx';
 
 export default function AppLayout() {
   const location = useLocation();
@@ -102,13 +102,7 @@ export default function AppLayout() {
           Me
         </NavLink>
       </nav>
-      {location.pathname === '/' && (
-        <QuickAddFab
-          onPick={(mode) => {
-            window.dispatchEvent(new CustomEvent('spendly-open-quick-add', { detail: { mode } }));
-          }}
-        />
-      )}
+      <SpendiAssistant />
     </div>
   );
 }
