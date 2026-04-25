@@ -10,6 +10,7 @@ import QuickAddFab from '../components/QuickAddFab.jsx';
 import TxModals from '../components/TxModals.jsx';
 import EditTransactionModal from '../components/EditTransactionModal.jsx';
 import SwipeableRow from '../components/SwipeableRow.jsx';
+import BiometricOverlay from '../components/BiometricOverlay.jsx';
 
 function txTitle(tx) {
   if (tx.type === 'transfer') {
@@ -58,6 +59,7 @@ export default function Dashboard() {
     heroBalanceHidden,
   } = usePrivacy();
   const { user, updateBudget } = useAuth();
+  const [showBio, setShowBio] = useState(false);
   const [faceErr, setFaceErr] = useState('');
   const [showBudgetModal, setShowBudgetModal] = useState(false);
   const [budgetInput, setBudgetInput] = useState('');
@@ -154,6 +156,14 @@ export default function Dashboard() {
 
   return (
     <>
+      {showBio && (
+        <BiometricOverlay 
+          onComplete={() => {
+            setShowBio(false);
+            revealWithBiometric().catch(() => {});
+          }} 
+        />
+      )}
       <section className={`balance-masthead ${netMonth >= 0 ? 'mood-positive' : 'mood-negative'}`}>
         <div className="security-badge">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -191,7 +201,7 @@ export default function Dashboard() {
                 <button
                   type="button"
                   className="btn btn-primary"
-                  onClick={() => revealWithBiometric().catch(() => {})}
+                  onClick={() => setShowBio(true)}
                 >
                   Unlock
                 </button>

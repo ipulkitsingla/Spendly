@@ -43,6 +43,11 @@ export default function AppLayout() {
 
   return (
     <div className="app-shell">
+      <div className="ambient-bg">
+        <div className="blob blob--1" />
+        <div className="blob blob--2" />
+        <div className="blob blob--3" />
+      </div>
       <aside className="desktop-rail">
         <div className="card desktop-rail-brand">
           <strong className="desktop-rail-title">Spendly</strong>
