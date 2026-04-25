@@ -182,14 +182,14 @@ export default function Dashboard() {
 
     recognition.onresult = async (event) => {
       const heard = event.results?.[0]?.[0]?.transcript || '';
-      const parsed = parseVoiceAdd(heard, categories);
+      const parsed = parseVoiceAdd(heard, { categories, accounts });
       if (!parsed.ok) {
         hapticError();
         setVoiceStatus(parsed.message);
         return;
       }
 
-      const chosenAccountId = accountFilter || accounts[0]?._id;
+      const chosenAccountId = parsed.accountHint?.accountId || accountFilter || accounts[0]?._id;
       if (!chosenAccountId) {
         hapticError();
         setVoiceStatus('No account available to add transaction.');
@@ -204,8 +204,13 @@ export default function Dashboard() {
         });
         await refresh();
         hapticSuccess();
+        const accLabel = parsed.accountHint?.accountName
+          ? ` from ${parsed.accountHint.accountName}`
+          : chosenAccountId && accountsById[String(chosenAccountId)]?.name
+            ? ` from ${accountsById[String(chosenAccountId)].name}`
+            : '';
         setVoiceStatus(
-          `Added ${parsed.payload.type} ${formatMoney(parsed.payload.amount)} for ${parsed.payload.category}.`
+          `Added ${parsed.payload.type} ${formatMoney(parsed.payload.amount)} for ${parsed.payload.category}${accLabel}.`
         );
       } catch (e) {
         hapticError();
@@ -230,7 +235,7 @@ export default function Dashboard() {
     };
 
     recognition.start();
-  }, [accounts, accountFilter, categories, refresh]);
+  }, [accounts, accountFilter, categories, refresh, accountsById]);
 
   return (
     <>
