@@ -1,6 +1,5 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import { toggleTheme as flipTheme } from '../utils/theme.js';
-import { hapticLight } from '../utils/haptics.js';
 
 function subscribe(cb) {
   const el = document.documentElement;
@@ -21,7 +20,6 @@ export default function ThemeToggle() {
   const mode = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   const onToggle = useCallback(() => {
-    hapticLight();
     flipTheme();
   }, []);
 

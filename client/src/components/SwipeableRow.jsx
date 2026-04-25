@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react';
-import { hapticLight, hapticMedium } from '../utils/haptics.js';
 
 const REVEAL = 148;
 const SNAP = REVEAL * 0.45;
@@ -70,9 +69,6 @@ export default function SwipeableRow({ children, onEdit, onDelete }) {
 
     const x = live.current;
     const snapped = x < -SNAP ? -REVEAL : 0;
-    if ((live.current === 0 && snapped !== 0) || (live.current !== 0 && snapped === 0)) {
-      hapticLight();
-    }
     live.current = snapped;
     setOffset(snapped);
   };
@@ -82,22 +78,13 @@ export default function SwipeableRow({ children, onEdit, onDelete }) {
   return (
     <div className={`swipe-row-wrap glass-bleed${revealed ? ' swipe-row-wrap--open' : ''}`}>
       <div className="swipe-row-actions">
-        <button
-          type="button"
-          className="swipe-act swipe-act-edit"
-          onClick={() => {
-            hapticMedium();
-            close();
-            onEdit?.();
-          }}
-        >
+        <button type="button" className="swipe-act swipe-act-edit" onClick={() => { close(); onEdit?.(); }}>
           Edit
         </button>
         <button
           type="button"
           className="swipe-act swipe-act-del"
           onClick={() => {
-            hapticMedium();
             close();
             onDelete?.();
           }}
