@@ -73,23 +73,9 @@ async function sendWelcomeEmail(user) {
 export async function runExpenseReminder() {
   const periodKey = dayPeriodKey();
   const users = await User.find({}, { name: 1, email: 1, emailPreferences: 1 }).lean();
-  const stats = {
-    periodKey,
-    usersScanned: users.length,
-    optedOut: 0,
-    alreadySent: 0,
-    sent: 0,
-    failed: 0,
-  };
   for (const user of users) {
-    if (user.emailPreferences?.expenseReminder === false) {
-      stats.optedOut += 1;
-      continue;
-    }
-    if (await wasSent(user._id, 'daily_expense_reminder', periodKey)) {
-      stats.alreadySent += 1;
-      continue;
-    }
+    if (user.emailPreferences?.expenseReminder === false) continue;
+    if (await wasSent(user._id, 'daily_expense_reminder', periodKey)) continue;
     try {
       await sendEmail({
         to: user.email,
@@ -104,36 +90,18 @@ export async function runExpenseReminder() {
         `,
       });
       await markSent(user._id, 'daily_expense_reminder', periodKey);
-      stats.sent += 1;
     } catch (e) {
-      stats.failed += 1;
       console.error(`Failed expense reminder for ${user.email}:`, e.message);
     }
   }
-  return stats;
 }
 
 export async function runPendingDebtReminder() {
   const periodKey = dayPeriodKey();
   const users = await User.find({}, { name: 1, email: 1, emailPreferences: 1 }).lean();
-  const stats = {
-    periodKey,
-    usersScanned: users.length,
-    optedOut: 0,
-    alreadySent: 0,
-    noPendingDebt: 0,
-    sent: 0,
-    failed: 0,
-  };
   for (const user of users) {
-    if (user.emailPreferences?.pendingDebtReminder === false) {
-      stats.optedOut += 1;
-      continue;
-    }
-    if (await wasSent(user._id, 'daily_pending_reminder', periodKey)) {
-      stats.alreadySent += 1;
-      continue;
-    }
+    if (user.emailPreferences?.pendingDebtReminder === false) continue;
+    if (await wasSent(user._id, 'daily_pending_reminder', periodKey)) continue;
     try {
       const pendingData = await PendingTransaction.aggregate([
         {
@@ -153,10 +121,7 @@ export async function runPendingDebtReminder() {
 
       const pendingCount = pendingData[0]?.count || 0;
       const totalAmount = pendingData[0]?.totalAmount || 0;
-      if (!pendingCount) {
-        stats.noPendingDebt += 1;
-        continue;
-      }
+      if (!pendingCount) continue;
       await sendEmail({
         to: user.email,
         subject: '10PM reminder: Review pending debts',
@@ -180,36 +145,19 @@ export async function runPendingDebtReminder() {
 `,
       });
       await markSent(user._id, 'daily_pending_reminder', periodKey);
-      stats.sent += 1;
     } catch (e) {
-      stats.failed += 1;
       console.error(`Failed pending reminder for ${user.email}:`, e.message);
     }
   }
-  return stats;
 }
 
 export async function runMonthlyStatementEmail() {
   const statementMonth = prevMonthKey();
   const users = await User.find({}, { name: 1, email: 1, emailPreferences: 1 }).lean();
-  const stats = {
-    statementMonth,
-    usersScanned: users.length,
-    optedOut: 0,
-    alreadySent: 0,
-    sent: 0,
-    failed: 0,
-  };
   for (const user of users) {
-    if (user.emailPreferences?.monthlyStatement === false) {
-      stats.optedOut += 1;
-      continue;
-    }
+    if (user.emailPreferences?.monthlyStatement === false) continue;
     const periodKey = statementMonth;
-    if (await wasSent(user._id, 'monthly_statement', periodKey)) {
-      stats.alreadySent += 1;
-      continue;
-    }
+    if (await wasSent(user._id, 'monthly_statement', periodKey)) continue;
     try {
       const statement = await buildMonthlyStatement(user._id, statementMonth);
       const pdfBuffer = await buildStatementPdfBuffer({
@@ -245,13 +193,10 @@ export async function runMonthlyStatementEmail() {
         ],
       });
       await markSent(user._id, 'monthly_statement', periodKey);
-      stats.sent += 1;
     } catch (e) {
-      stats.failed += 1;
       console.error(`Failed monthly statement for ${user.email}:`, e.message);
     }
   }
-  return stats;
 }
 
 async function runStartupCatchup() {
