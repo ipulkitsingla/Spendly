@@ -4,15 +4,15 @@ export default function BiometricOverlay({ onComplete }) {
   const [status, setStatus] = useState('scanning'); // scanning -> success
 
   useEffect(() => {
-    // Stage 1: Scanning
+    // Stage 1: Scanning (Faster for performance)
     const t1 = setTimeout(() => {
       setStatus('success');
-    }, 1800);
+    }, 800);
 
     // Stage 2: Fade out and complete
     const t2 = setTimeout(() => {
       onComplete();
-    }, 2400);
+    }, 1200);
 
     return () => {
       clearTimeout(t1);

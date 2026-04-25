@@ -2923,6 +2923,7 @@ button:active,
 .bio-icon {
   color: white;
   transition: transform 0.3s ease;
+  will-change: transform;
 }
 
 .bio-laser {
@@ -2931,7 +2932,8 @@ button:active,
   background: linear-gradient(90deg, transparent, #7c3aed, transparent);
   box-shadow: 0 0 15px #7c3aed;
   z-index: 2;
-  animation: laser-scan 1.8s infinite ease-in-out;
+  animation: laser-scan 0.8s infinite ease-in-out;
+  will-change: top, opacity;
 }
 
 .bio-ring-success .bio-laser {
@@ -2940,8 +2942,8 @@ button:active,
 
 @keyframes laser-scan {
   0% { top: 10%; opacity: 0; }
-  20% { opacity: 1; }
-  80% { opacity: 1; }
+  30% { opacity: 1; }
+  70% { opacity: 1; }
   100% { top: 90%; opacity: 0; }
 }
 

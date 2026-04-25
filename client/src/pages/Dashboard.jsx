@@ -154,6 +154,11 @@ export default function Dashboard() {
       }
     : null;
 
+  const txGroups = useMemo(() => {
+    if (!txs.length) return [];
+    return groupTxsByDate(txs);
+  }, [txs]);
+
   return (
     <>
       {showBio && (
@@ -299,12 +304,6 @@ export default function Dashboard() {
 
       {err && <p style={{ color: 'var(--expense)', padding: '0 16px' }}>{err}</p>}
 
-      {/* <div className="dashboard-month-running card">
-        <div className="dashboard-month-running-label">Running balance (this month)</div>
-        <div className="dashboard-month-running-amount">{formatMoney(endRunning)}</div>
-        <p className="dashboard-month-running-hint">At end of the list for {monthTitle}</p>
-      </div> */}
-
       <div className="summary-strip summary-strip--three">
         <div className="stat">
           <span className="stat-title-row">
@@ -418,8 +417,8 @@ export default function Dashboard() {
         <p className="empty">No transactions this month. Tap + to add one.</p>
       ) : (
         <div style={{ paddingBottom: '88px' }}>
-          {groupTxsByDate(txs).map(([date, dayTxs]) => (
-            <div key={date} className="tx-group-card">
+          {txGroups.map(([date, dayTxs]) => (
+            <div key={date} className="tx-group-card animate-fade-up">
               <div className="tx-group-header">
                 <span className="tx-group-date">{formatGroupDate(date)}</span>
                 <span className="tx-group-count">
