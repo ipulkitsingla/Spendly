@@ -698,16 +698,9 @@ button {
 
 .spendi-wrap {
   position: fixed;
-  left: 18px;
+  right: 18px;
   bottom: calc(var(--nav-h) + var(--safe-bottom) + 84px);
   z-index: 70;
-}
-
-@media (min-width: 900px) {
-  .spendi-wrap {
-    left: 32px;
-    bottom: 32px;
-  }
 }
 
 .spendi-fab {
