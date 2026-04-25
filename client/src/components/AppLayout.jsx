@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { browserOnline } from '../offline/networkState.js';
 import { drainOutbox } from '../offline/sync.js';
 import { outboxCount } from '../offline/store.js';
+import { hapticLight } from '../utils/haptics.js';
 
 export default function AppLayout() {
+  const location = useLocation();
   const [online, setOnline] = useState(() => browserOnline());
   const [syncNote, setSyncNote] = useState('');
 
@@ -49,19 +51,19 @@ export default function AppLayout() {
           <p className="desktop-rail-tagline">Money tracker</p>
         </div>
         <nav className="desktop-nav">
-          <NavLink end to="/" className={({ isActive }) => (isActive ? 'active' : '')}>
+          <NavLink end to="/" className={({ isActive }) => (isActive ? 'active' : '')} onClick={hapticLight}>
             <span>🏠</span> Home
           </NavLink>
-          <NavLink to="/stats" className={({ isActive }) => (isActive ? 'active' : '')}>
+          <NavLink to="/stats" className={({ isActive }) => (isActive ? 'active' : '')} onClick={hapticLight}>
             <span>📊</span> Statistics
           </NavLink>
-          <NavLink to="/accounts" className={({ isActive }) => (isActive ? 'active' : '')}>
+          <NavLink to="/accounts" className={({ isActive }) => (isActive ? 'active' : '')} onClick={hapticLight}>
             <span>💳</span> Accounts
           </NavLink>
-          <NavLink to="/pending" className={({ isActive }) => (isActive ? 'active' : '')}>
+          <NavLink to="/pending" className={({ isActive }) => (isActive ? 'active' : '')} onClick={hapticLight}>
             <span>🧾</span> Pending
           </NavLink>
-          <NavLink to="/profile" className={({ isActive }) => (isActive ? 'active' : '')}>
+          <NavLink to="/profile" className={({ isActive }) => (isActive ? 'active' : '')} onClick={hapticLight}>
             <span>👤</span> Profile
           </NavLink>
         </nav>
@@ -73,26 +75,28 @@ export default function AppLayout() {
             {online && syncNote && <span>{syncNote}</span>}
           </div>
         )}
-        <Outlet />
+        <div key={location.pathname} className="route-transition route-transition--enter">
+          <Outlet />
+        </div>
       </div>
       <nav className="bottom-nav">
-        <NavLink end to="/" className={({ isActive }) => (isActive ? 'active' : '')}>
+        <NavLink end to="/" className={({ isActive }) => (isActive ? 'active' : '')} onClick={hapticLight}>
           <span className="nav-icon">🏠</span>
           Home
         </NavLink>
-        <NavLink to="/stats" className={({ isActive }) => (isActive ? 'active' : '')}>
+        <NavLink to="/stats" className={({ isActive }) => (isActive ? 'active' : '')} onClick={hapticLight}>
           <span className="nav-icon">📊</span>
           Stats
         </NavLink>
-        <NavLink to="/accounts" className={({ isActive }) => (isActive ? 'active' : '')}>
+        <NavLink to="/accounts" className={({ isActive }) => (isActive ? 'active' : '')} onClick={hapticLight}>
           <span className="nav-icon">💳</span>
           Accounts
         </NavLink>
-        <NavLink to="/pending" className={({ isActive }) => (isActive ? 'active' : '')}>
+        <NavLink to="/pending" className={({ isActive }) => (isActive ? 'active' : '')} onClick={hapticLight}>
           <span className="nav-icon">🧾</span>
           Debts
         </NavLink>
-        <NavLink to="/profile" className={({ isActive }) => (isActive ? 'active' : '')}>
+        <NavLink to="/profile" className={({ isActive }) => (isActive ? 'active' : '')} onClick={hapticLight}>
           <span className="nav-icon">👤</span>
           Me
         </NavLink>

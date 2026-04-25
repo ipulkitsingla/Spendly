@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { api } from '../api.js';
+import { hapticError, hapticLight, hapticSuccess } from '../utils/haptics.js';
 
 function Field({ label, children }) {
   return (
@@ -33,6 +34,7 @@ export default function EditTransactionModal({ tx, accounts, categories = [], on
       if (tx.type === 'balance_update') {
         const nb = Number(newBalance);
         if (Number.isNaN(nb)) {
+          hapticError();
           setErr('Invalid balance');
           setBusy(false);
           return;
@@ -46,11 +48,13 @@ export default function EditTransactionModal({ tx, accounts, categories = [], on
       } else if (tx.type === 'transfer') {
         const num = Number(amount);
         if (Number.isNaN(num) || num < 0) {
+          hapticError();
           setErr('Invalid amount');
           setBusy(false);
           return;
         }
         if (fromId === toId) {
+          hapticError();
           setErr('Choose two different accounts');
           setBusy(false);
           return;
@@ -66,6 +70,7 @@ export default function EditTransactionModal({ tx, accounts, categories = [], on
       } else {
         const num = Number(amount);
         if (Number.isNaN(num) || num < 0) {
+          hapticError();
           setErr('Invalid amount');
           setBusy(false);
           return;
@@ -79,8 +84,10 @@ export default function EditTransactionModal({ tx, accounts, categories = [], on
         });
       }
       onSaved();
+      hapticSuccess();
       onClose();
     } catch (ex) {
+      hapticError();
       setErr(ex.message);
     } finally {
       setBusy(false);
@@ -94,8 +101,10 @@ export default function EditTransactionModal({ tx, accounts, categories = [], on
     try {
       await api.deleteTransaction(tx._id);
       onSaved();
+      hapticSuccess();
       onClose();
     } catch (ex) {
+      hapticError();
       setErr(ex.message);
     } finally {
       setBusy(false);
@@ -112,7 +121,15 @@ export default function EditTransactionModal({ tx, accounts, categories = [], on
           : 'Edit balance update';
 
   return (
-    <div className="modal-backdrop" role="presentation" onClick={() => !busy && onClose()}>
+    <div
+      className="modal-backdrop"
+      role="presentation"
+      onClick={() => {
+        if (busy) return;
+        hapticLight();
+        onClose();
+      }}
+    >
       <div className="modal" role="dialog" onClick={(e) => e.stopPropagation()}>
         <h2>{title}</h2>
         {err && <p style={{ color: 'var(--expense)', fontSize: '0.9rem' }}>{err}</p>}
@@ -212,7 +229,7 @@ export default function EditTransactionModal({ tx, accounts, categories = [], on
             <button type="button" className="btn btn-ghost" disabled={busy} onClick={remove}>
               Delete
             </button>
-            <button type="button" className="btn btn-ghost" disabled={busy} onClick={onClose}>
+            <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => { hapticLight(); onClose(); }}>
               Cancel
             </button>
             <button type="submit" className="btn btn-primary" disabled={busy}>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { api } from '../api.js';
+import { hapticError, hapticLight, hapticSuccess } from '../utils/haptics.js';
 
 function Field({ label, children }) {
   return (
@@ -36,6 +37,7 @@ export default function TxModals({ mode, onClose, accounts, categories = [], onS
   };
 
   const close = () => {
+    hapticLight();
     reset();
     onClose();
   };
@@ -56,6 +58,7 @@ export default function TxModals({ mode, onClose, accounts, categories = [], onS
     setErr('');
     const num = Number(amount);
     if (Number.isNaN(num) || num < 0) {
+      hapticError();
       setErr('Enter a valid amount');
       return;
     }
@@ -63,6 +66,7 @@ export default function TxModals({ mode, onClose, accounts, categories = [], onS
     try {
       if (mode === 'pending') {
         if (!personName.trim()) {
+          hapticError();
           setErr('Person name is required');
           setBusy(false);
           return;
@@ -76,6 +80,7 @@ export default function TxModals({ mode, onClose, accounts, categories = [], onS
         });
       } else if (mode === 'transfer') {
         if (fromId === toId) {
+          hapticError();
           setErr('Choose two different accounts');
           setBusy(false);
           return;
@@ -100,8 +105,10 @@ export default function TxModals({ mode, onClose, accounts, categories = [], onS
         });
       }
       onSaved();
+      hapticSuccess();
       close();
     } catch (ex) {
+      hapticError();
       setErr(ex.message);
     } finally {
       setBusy(false);
