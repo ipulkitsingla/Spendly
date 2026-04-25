@@ -110,6 +110,7 @@ export async function runExpenseReminder() {
       console.error(`Failed expense reminder for ${user.email}:`, e.message);
     }
   }
+  console.log(`[JOB:expense-reminder] Finished:`, stats);
   return stats;
 }
 
@@ -186,6 +187,7 @@ export async function runPendingDebtReminder() {
       console.error(`Failed pending reminder for ${user.email}:`, e.message);
     }
   }
+  console.log(`[JOB:pending-reminder] Finished:`, stats);
   return stats;
 }
 
@@ -251,6 +253,7 @@ export async function runMonthlyStatementEmail(overrideMonth) {
       console.error(`Failed monthly statement for ${user.email}:`, e.message);
     }
   }
+  console.log(`[JOB:monthly-statement] Finished:`, stats);
   return stats;
 }
 

@@ -24,8 +24,9 @@ router.get('/health', (_, res) => {
 
 router.all('/expense-reminder', ensureCronAuth, async (req, res) => {
   try {
-    const stats = await runExpenseReminder();
-    res.json({ ok: true, job: 'expense-reminder', stats });
+    res.setHeader('x-no-compression', 'true');
+    await runExpenseReminder();
+    res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ message: e?.message || 'expense reminder failed' });
   }
@@ -33,8 +34,9 @@ router.all('/expense-reminder', ensureCronAuth, async (req, res) => {
 
 router.all('/pending-reminder', ensureCronAuth, async (req, res) => {
   try {
-    const stats = await runPendingDebtReminder();
-    res.json({ ok: true, job: 'pending-reminder', stats });
+    res.setHeader('x-no-compression', 'true');
+    await runPendingDebtReminder();
+    res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ message: e?.message || 'pending reminder failed' });
   }
@@ -42,9 +44,10 @@ router.all('/pending-reminder', ensureCronAuth, async (req, res) => {
 
 router.all('/monthly-statement', ensureCronAuth, async (req, res) => {
   try {
+    res.setHeader('x-no-compression', 'true');
     const month = req.query.month; // e.g. 2026-04
-    const stats = await runMonthlyStatementEmail(month);
-    res.json({ ok: true, job: 'monthly-statement', stats });
+    await runMonthlyStatementEmail(month);
+    res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ message: e?.message || 'monthly statement failed' });
   }
