@@ -53,10 +53,6 @@ export default function StatsPage() {
   const [summary, setSummary] = useState(null);
   const [series, setSeries] = useState([]);
   const [err, setErr] = useState('');
-  const [whatIfPrompt, setWhatIfPrompt] = useState('');
-  const [whatIfResult, setWhatIfResult] = useState(null);
-  const [whatIfErr, setWhatIfErr] = useState('');
-  const [runningWhatIf, setRunningWhatIf] = useState(false);
 
   const { from, to, bucket } = useMemo(() => rangeForPreset(preset), [preset]);
 
@@ -84,21 +80,6 @@ export default function StatsPage() {
       .sort((a, b) => b.value - a.value)
       .slice(0, 8);
   }, [summary]);
-
-  const runWhatIf = useCallback(async () => {
-    const prompt = whatIfPrompt.trim();
-    if (!prompt) return;
-    setWhatIfErr('');
-    setRunningWhatIf(true);
-    try {
-      const data = await api.runWhatIf(prompt);
-      setWhatIfResult(data);
-    } catch (e) {
-      setWhatIfErr(e.message || 'Could not run simulation');
-    } finally {
-      setRunningWhatIf(false);
-    }
-  }, [whatIfPrompt]);
 
   return (
     <>
@@ -146,46 +127,6 @@ export default function StatsPage() {
           </div>
         </div>
       )}
-
-      <section className="card" style={{ margin: '0 16px 18px' }}>
-        <strong>What If Simulator</strong>
-        <p style={{ margin: '8px 0 12px', color: 'var(--muted)', fontSize: '0.85rem' }}>
-          Try: What if I skip coffee for 3 months?
-        </p>
-        <textarea
-          className="input"
-          rows={3}
-          value={whatIfPrompt}
-          onChange={(e) => setWhatIfPrompt(e.target.value)}
-          placeholder="What if I reduce food spending by ₹200 daily for 3 months?"
-          style={{ resize: 'vertical', minHeight: 84 }}
-        />
-        <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-          <button type="button" className="btn btn-primary" disabled={runningWhatIf} onClick={runWhatIf}>
-            {runningWhatIf ? 'Simulating…' : 'Run Simulation'}
-          </button>
-        </div>
-        {whatIfErr && <p style={{ color: 'var(--expense)', marginTop: 10 }}>{whatIfErr}</p>}
-        {whatIfResult?.impactCards?.length > 0 && (
-          <div className="summary-strip summary-strip--three" style={{ margin: '14px 0 0' }}>
-            {whatIfResult.impactCards.map((card) => {
-              const toneClass =
-                card.tone === 'positive' ? 'type-income' : card.tone === 'negative' ? 'type-expense' : '';
-              const val =
-                card.id === 'confidence'
-                  ? `${formatMoney(card.value.low)} to ${formatMoney(card.value.high)}`
-                  : formatMoney(card.value);
-              return (
-                <div key={card.id} className="stat">
-                  <span>{card.title}</span>
-                  <strong className={toneClass}>{val}</strong>
-                  <p style={{ margin: '5px 0 0', color: 'var(--muted)', fontSize: '0.76rem' }}>{card.subtitle}</p>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
 
       <div className="charts-grid">
         <div className="card" style={{ minHeight: 280 }}>

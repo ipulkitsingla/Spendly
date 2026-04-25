@@ -1,18 +1,18 @@
 /* Light theme — variables + surfaces that use hardcoded dark colors */
 
 html[data-theme='light'] {
-  --bg: #f8fafc;
+  --bg: #f1f5f9;
   --text: #0f172a;
-  --muted: #64748b;
-  --surface: #ffffff;
-  --surface-2: #ffffff;
-  --border: #e2e8f0;
-  --glass-bg: #ffffff;
-  --glass-bg-deep: #f8fafc;
+  --muted: rgba(15, 23, 42, 0.55);
+  --surface: rgba(255, 255, 255, 0.88);
+  --surface-2: rgba(255, 255, 255, 0.95);
+  --border: rgba(15, 23, 42, 0.1);
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-deep: rgba(241, 245, 249, 0.85);
   --glass-edge: rgba(255, 255, 255, 0.95);
-  --glass-blur: blur(0px) saturate(100%);
+  --glass-blur: blur(22px) saturate(160%);
   --income: #15803d;
-  --expense: #ef4444;
+  --expense: #e11d48;
   --transfer: #2563eb;
   --balance-update: #7c3aed;
   --pending: #c2410c;
@@ -20,29 +20,29 @@ html[data-theme='light'] {
 }
 
 html[data-theme='light'] body {
-  background-color: #f8fafc;
-  background-image: none;
+  background-color: #f1f5f9;
+  background-image:
+    radial-gradient(120% 90% at 50% -30%, rgba(34, 197, 94, 0.14), transparent 55%),
+    radial-gradient(90% 70% at 100% 10%, rgba(139, 92, 246, 0.1), transparent 50%),
+    radial-gradient(80% 60% at 0% 80%, rgba(56, 189, 248, 0.1), transparent 55%),
+    linear-gradient(165deg, #f8fafc 0%, #e2e8f0 45%, #f1f5f9 100%);
   color: var(--text);
 }
 
 html[data-theme='light'] .glass {
-  background: #ffffff;
-  border: 1px solid var(--border);
   box-shadow:
-    0 6px 20px rgba(15, 23, 42, 0.04),
+    0 8px 32px rgba(15, 23, 42, 0.08),
     inset 0 1px 0 var(--glass-edge);
 }
 
 html[data-theme='light'] .glass-bleed {
-  border-color: var(--border);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.06);
 }
 
 html[data-theme='light'] .card {
-  background: #ffffff;
-  border: 1px solid var(--border);
   box-shadow:
-    0 8px 24px rgba(15, 23, 42, 0.05),
+    0 12px 30px rgba(15, 23, 42, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
@@ -71,15 +71,14 @@ html[data-theme='light'] .input {
 }
 
 html[data-theme='light'] .bottom-nav {
-  background: #ffffff;
-  border-top-color: var(--border);
-  box-shadow: 0 -6px 20px rgba(15, 23, 42, 0.06);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(241, 245, 249, 0.96));
+  border-top-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 -8px 40px rgba(15, 23, 42, 0.06);
 }
 
 html[data-theme='light'] .bottom-nav a.active {
-  background: #e2ecff;
-  border-color: #c7d2fe;
-  color: #2563eb;
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.25);
 }
 
 html[data-theme='light'] .offline-bar {
@@ -98,35 +97,9 @@ html[data-theme='light'] .tx-row-v2:active {
   background: rgba(15, 23, 42, 0.04);
 }
 
-html[data-theme='light'] .tx-list-v2 {
-  padding: 0 16px 100px;
-  display: grid;
-  gap: 12px;
-}
-
-html[data-theme='light'] .swipe-row-wrap {
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  overflow: hidden;
-  background: #ffffff;
-  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
-}
-
-html[data-theme='light'] .swipe-row-actions {
-  background: #e2e8f0;
-}
-
-html[data-theme='light'] .tx-row-v2 {
-  min-height: 92px;
-  padding: 16px;
-}
-
 html[data-theme='light'] .tx-icon-tile {
-  width: 44px;
-  height: 44px;
-  border-radius: 999px;
-  background: #eef2ff;
-  border-color: #dbeafe;
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.08);
 }
 
 html[data-theme='light'] .swipe-row-actions {
@@ -139,11 +112,10 @@ html[data-theme='light'] .swipe-row-wrap:not(.swipe-row-wrap--open) .swipe-act-d
 }
 
 html[data-theme='light'] .balance-masthead {
-  background: #ffffff;
   box-shadow:
-    0 10px 30px rgba(15, 23, 42, 0.06),
+    0 24px 52px rgba(15, 23, 42, 0.09),
     inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  border-color: var(--border);
+  border-color: rgba(15, 23, 42, 0.08);
 }
 
 html[data-theme='light'] .modal-backdrop {
@@ -170,8 +142,8 @@ html[data-theme='light'] .recharts-text {
 }
 
 html[data-theme='light'] .month-bar button {
-  background: #ffffff;
-  border-color: var(--border);
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(15, 23, 42, 0.1);
 }
 
 html[data-theme='light'] .pill:not(.active) {
@@ -179,15 +151,7 @@ html[data-theme='light'] .pill:not(.active) {
 }
 
 html[data-theme='light'] .theme-toggle {
-  background: #ffffff;
-  border-color: var(--border);
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
-}
-
-html[data-theme='light'] .fab-main {
-  background: linear-gradient(145deg, #60a5fa, #3b82f6);
-  border-color: rgba(255, 255, 255, 0.85);
-  box-shadow:
-    0 14px 30px rgba(37, 99, 235, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
 }

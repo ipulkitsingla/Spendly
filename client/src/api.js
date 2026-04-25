@@ -369,13 +369,4 @@ export const api = {
       `/api/stats/timeseries?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&bucket=${bucket}`
     );
   },
-  runWhatIf: async (prompt) => {
-    if (!browserOnline()) {
-      throw new Error('What-if simulator needs an internet connection.');
-    }
-    return rawRequest('/api/what-if', {
-      method: 'POST',
-      body: JSON.stringify({ prompt }),
-    });
-  },
 };
