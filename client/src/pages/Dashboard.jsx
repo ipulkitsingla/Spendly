@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../api.js';
+import { useAuth } from '../context/AuthContext.jsx';
 import { usePrivacy } from '../context/PrivacyContext.jsx';
 import { formatMonthLong } from '../utils/dates.js';
 import { formatDay, formatGroupDate, formatMoney, formatTxTime, monthKey, shiftMonth } from '../utils/format.js';
@@ -56,7 +57,10 @@ export default function Dashboard() {
     revealWithBiometric,
     heroBalanceHidden,
   } = usePrivacy();
+  const { user, updateBudget } = useAuth();
   const [faceErr, setFaceErr] = useState('');
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
+  const [budgetInput, setBudgetInput] = useState('');
 
   const [month, setMonth] = useState(() => monthKey());
   const [accountFilter, setAccountFilter] = useState('');
@@ -308,6 +312,50 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {user?.monthlyBudget > 0 && !accountFilter && (
+        <div className="card dashboard-budget-card" onClick={() => {
+          setBudgetInput(user.monthlyBudget.toString());
+          setShowBudgetModal(true);
+        }}>
+          <div className="budget-info">
+            <div className="budget-label">
+              <span>Monthly Budget</span>
+              <strong className={monthExpense > user.monthlyBudget ? 'type-expense' : 'type-income'}>
+                {Math.round((monthExpense / user.monthlyBudget) * 100)}% spent
+              </strong>
+            </div>
+            <div className="budget-progress-track">
+              <div 
+                className={`budget-progress-fill ${monthExpense > user.monthlyBudget ? 'over' : ''}`}
+                style={{ width: `${Math.min(100, (monthExpense / user.monthlyBudget) * 100)}%` }}
+              />
+            </div>
+            <div className="budget-footer">
+              <div className="budget-spent-summary">
+                <span className="budget-spent-amt">{formatMoney(monthExpense)}</span>
+                <span className="budget-sep">of</span>
+                <span className="budget-total-amt">{formatMoney(user.monthlyBudget)}</span>
+              </div>
+              <span className={`budget-remaining ${monthExpense > user.monthlyBudget ? 'type-expense' : 'type-income'}`}>
+                {user.monthlyBudget - monthExpense > 0 
+                  ? `${formatMoney(user.monthlyBudget - monthExpense)} left`
+                  : `${formatMoney(monthExpense - user.monthlyBudget)} over`}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!user?.monthlyBudget && !accountFilter && (
+        <div className="card dashboard-budget-card dashboard-budget-card--empty" onClick={() => {
+          setBudgetInput('');
+          setShowBudgetModal(true);
+        }}>
+          <span>Set a monthly budget goal</span>
+          <button type="button" className="btn btn-ghost btn-sm">Set Budget</button>
+        </div>
+      )}
+
       {txs.length === 0 ? (
         <p className="empty">No transactions this month. Tap + to add one.</p>
       ) : (
@@ -419,6 +467,42 @@ export default function Dashboard() {
           onClose={() => setEditTx(null)}
           onSaved={refresh}
         />
+      )}
+      {showBudgetModal && (
+        <div className="modal-backdrop" onClick={() => setShowBudgetModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">Monthly Budget</h3>
+              <button type="button" className="btn-close" onClick={() => setShowBudgetModal(false)}>×</button>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              try {
+                await updateBudget(Number(budgetInput));
+                setShowBudgetModal(false);
+              } catch (e) {
+                alert(e.message);
+              }
+            }}>
+              <div className="form-group" style={{ padding: '16px 0' }}>
+                <label className="label">Monthly Spending Limit</label>
+                <input
+                  autoFocus
+                  type="number"
+                  className="input"
+                  placeholder="e.g. 50000"
+                  value={budgetInput}
+                  onChange={(e) => setBudgetInput(e.target.value)}
+                />
+                <p className="hint" style={{ marginTop: 8 }}>Track your spending progress against this goal.</p>
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="btn btn-ghost" onClick={() => setShowBudgetModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Save Budget</button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </>
   );

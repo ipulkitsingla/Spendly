@@ -40,6 +40,7 @@ function normalizeProfile(u) {
       pendingDebtReminder: u?.emailPreferences?.pendingDebtReminder !== false,
       welcomeSignup: u?.emailPreferences?.welcomeSignup !== false,
     },
+    monthlyBudget: Number(u.monthlyBudget || 0),
   };
 }
 
@@ -117,6 +118,20 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  const updateBudget = async (budget) => {
+    const data = await api.updateBudget(budget);
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = {
+        ...prev,
+        monthlyBudget: Number(data.monthlyBudget),
+      };
+      writeCachedUser(next);
+      return next;
+    });
+    return data;
+  };
+
   const logout = () => {
     localStorage.removeItem('spendly_token');
     clearCachedUser();
@@ -124,7 +139,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateEmailPreferences }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateEmailPreferences, updateBudget }}>
       {children}
     </AuthContext.Provider>
   );

@@ -133,6 +133,7 @@ export const api = {
   me: () => rawRequest('/api/auth/me'),
   updateEmailPreferences: (body) =>
     rawRequest('/api/auth/email-preferences', { method: 'PATCH', body: JSON.stringify(body) }),
+  updateBudget: (budget) => rawRequest('/api/auth/budget', { method: 'PATCH', body: JSON.stringify({ budget }) }),
   accounts: () => request('/api/accounts'),
   createAccount: async (body) => {
     if (browserOnline()) {

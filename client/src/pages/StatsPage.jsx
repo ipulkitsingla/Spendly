@@ -11,6 +11,8 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  Area,
+  AreaChart,
 } from 'recharts';
 import { api } from '../api.js';
 import {
@@ -24,29 +26,64 @@ import {
 } from '../utils/dates.js';
 import { formatMoney } from '../utils/format.js';
 
-const COLORS = ['#22c55e', '#3b82f6', '#f97316', '#a855f7', '#ef4444', '#14b8a6', '#eab308'];
+const COLORS = [
+  '#6366f1', // Indigo
+  '#22c55e', // Green
+  '#f59e0b', // Amber
+  '#ec4899', // Pink
+  '#3b82f6', // Blue
+  '#a855f7', // Purple
+  '#06b6d4', // Cyan
+  '#f43f5e', // Rose
+];
 
 function rangeForPreset(preset, anchor = new Date()) {
-  const now = anchor;
+  const now = new Date(anchor);
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
+  const endOfToday = new Date(now);
+  endOfToday.setHours(23, 59, 59, 999);
+
   if (preset === 'daily') {
-    const to = now;
-    const from = subDays(now, 13);
-    return { from, to, bucket: 'day' };
+    return { from: startOfToday, to: endOfToday, bucket: 'day' };
   }
   if (preset === 'weekly') {
-    const to = now;
-    const from = subDays(now, 12 * 7);
-    return { from, to, bucket: 'week' };
+    const from = new Date(startOfToday);
+    from.setDate(from.getDate() - 6); // Last 7 days
+    return { from, to: endOfToday, bucket: 'day' };
   }
   if (preset === 'monthly') {
-    const from = startOfMonth(subMonths(now, 5));
+    const from = startOfMonth(now);
     const to = endOfMonth(now);
+    return { from, to, bucket: 'day' };
+  }
+  if (preset === 'yearly') {
+    const from = startOfYear(now);
+    const to = endOfYear(now);
     return { from, to, bucket: 'month' };
   }
-  const from = startOfYear(now);
-  const to = endOfYear(now);
-  return { from, to, bucket: 'month' };
+  return { from: startOfToday, to: endOfToday, bucket: 'day' };
 }
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="custom-chart-tooltip">
+        <p className="tooltip-label">{label}</p>
+        <div className="tooltip-items">
+          {payload.map((entry, index) => (
+            <div key={index} className="tooltip-item">
+              <span className="dot" style={{ backgroundColor: entry.color }} />
+              <span className="name">{entry.name}:</span>
+              <span className="value">{formatMoney(entry.value)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
 
 export default function StatsPage() {
   const [preset, setPreset] = useState('monthly');
@@ -81,96 +118,113 @@ export default function StatsPage() {
       .slice(0, 8);
   }, [summary]);
 
+  const topCategory = pieData[0] || null;
+  const daysInRange = Math.max(1, Math.ceil((to - from) / (1000 * 60 * 60 * 24)));
+  const dailyAvg = summary ? summary.totalExpense / daysInRange : 0;
+
   return (
-    <>
+    <div className="stats-container animate-fade-up">
       <header className="page-header">
-        <h1>Statistics</h1>
+        <h1>Insights</h1>
       </header>
 
-      <div className="pill-row">
-        {[
-          ['daily', 'Daily'],
-          ['weekly', 'Weekly'],
-          ['monthly', 'Monthly'],
-          ['yearly', 'Yearly'],
-        ].map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            className={`pill ${preset === id ? 'active' : ''}`}
-            onClick={() => setPreset(id)}
-          >
-            {label}
-          </button>
-        ))}
+      <div className="stats-controls">
+        <div className="pill-row">
+          {[
+            ['daily', 'Daily'],
+            ['weekly', 'Weekly'],
+            ['monthly', 'Monthly'],
+            ['yearly', 'Yearly'],
+          ].map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              className={`pill ${preset === id ? 'active' : ''}`}
+              onClick={() => setPreset(id)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <p className="stats-date-range">
+          {formatMediumDate(from)} — {formatMediumDate(to)}
+        </p>
       </div>
 
-      <p style={{ padding: '0 16px', color: 'var(--muted)', fontSize: '0.85rem', marginTop: 0 }}>
-        {formatMediumDate(from)} — {formatMediumDate(to)}
-      </p>
+      {err && <p className="error-text">{err}</p>}
 
-      {err && <p style={{ color: 'var(--expense)', padding: '0 16px' }}>{err}</p>}
+      <div className="stats-overview-grid">
+        <div className="card stat-card">
+          <span className="label">Total Income</span>
+          <strong className="value type-income">{formatMoney(summary?.totalIncome || 0)}</strong>
+        </div>
+        <div className="card stat-card">
+          <span className="label">Total Expenses</span>
+          <strong className="value type-expense">{formatMoney(summary?.totalExpense || 0)}</strong>
+        </div>
+        <div className="card stat-card">
+          <span className="label">Net Balance</span>
+          <strong className="value">{formatMoney(summary?.net || 0)}</strong>
+        </div>
+      </div>
 
-      {summary && (
-        <div className="summary-strip" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-          <div className="stat">
-            <span>Total income</span>
-            <strong className="type-income">{formatMoney(summary.totalIncome)}</strong>
-          </div>
-          <div className="stat">
-            <span>Total expenses</span>
-            <strong className="type-expense">{formatMoney(summary.totalExpense)}</strong>
-          </div>
-          <div className="stat">
-            <span>Net</span>
-            <strong>{formatMoney(summary.net)}</strong>
+      <div className="stats-insights-grid">
+        <div className="card insight-card">
+          <div className="insight-icon">🔥</div>
+          <div className="insight-body">
+            <span className="label">Top Category</span>
+            <strong className="value">{topCategory ? topCategory.name : 'N/A'}</strong>
+            {topCategory && <span className="sub">{formatMoney(topCategory.value)} spent</span>}
           </div>
         </div>
-      )}
+        <div className="card insight-card">
+          <div className="insight-icon">📅</div>
+          <div className="insight-body">
+            <span className="label">Daily Average</span>
+            <strong className="value">{formatMoney(dailyAvg)}</strong>
+            <span className="sub">Over {daysInRange} days</span>
+          </div>
+        </div>
+      </div>
 
       <div className="charts-grid">
-        <div className="card" style={{ minHeight: 280 }}>
-          <strong>Income vs expense</strong>
-          <div style={{ width: '100%', height: 220, marginTop: 12 }}>
-            <ResponsiveContainer>
-              <BarChart data={series}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="period" tick={{ fill: '#9ca3af', fontSize: 11 }} />
-                <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} />
-                <Tooltip
-                  contentStyle={{ background: '#111827', border: '1px solid #374151' }}
-                  formatter={(v) => formatMoney(v)}
-                />
-                <Legend />
-                <Bar dataKey="income" fill="#22c55e" name="Income" />
-                <Bar dataKey="expense" fill="#ef4444" name="Expense" />
-              </BarChart>
-            </ResponsiveContainer>
+        <div className="card chart-card">
+          <div className="chart-header">
+            <strong>Category Split</strong>
+            <span className="sub">Top expenses by category</span>
           </div>
-        </div>
-
-        <div className="card" style={{ minHeight: 280 }}>
-          <strong>Expense by category</strong>
           {pieData.length === 0 ? (
-            <p className="empty" style={{ padding: '24px 0' }}>
-              No expense data in this range.
-            </p>
+            <p className="empty">No expense data available.</p>
           ) : (
-            <div style={{ width: '100%', height: 240, marginTop: 12 }}>
-              <ResponsiveContainer>
+            <div className="chart-wrapper">
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={80}>
+                  <Pie 
+                    data={pieData} 
+                    dataKey="value" 
+                    nameKey="name" 
+                    innerRadius="65%"
+                    outerRadius="90%"
+                    paddingAngle={5}
+                    stroke="none"
+                  >
                     {pieData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      <Cell key={i} fill={COLORS[i % COLORS.length]} cornerRadius={4} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(v) => formatMoney(v)} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    height={36} 
+                    iconType="circle"
+                    wrapperStyle={{ fontSize: 11, color: 'var(--muted)', paddingTop: 20 }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }

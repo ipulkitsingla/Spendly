@@ -35,6 +35,7 @@ const userSchema = new mongoose.Schema(
       pendingDebtReminder: { type: Boolean, default: true },
       welcomeSignup: { type: Boolean, default: true },
     },
+    monthlyBudget: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

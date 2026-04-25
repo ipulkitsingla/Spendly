@@ -105,4 +105,20 @@ router.patch('/email-preferences', authRequired, async (req, res) => {
   }
 });
 
+router.patch('/budget', authRequired, async (req, res) => {
+  try {
+    const { budget } = req.body;
+    const num = Number(budget);
+    if (isNaN(num) || num < 0) {
+      return res.status(400).json({ message: 'Budget must be a positive number' });
+    }
+    const user = await User.findByIdAndUpdate(req.userId, { $set: { monthlyBudget: num } }, { new: true }).select('-passwordHash');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json({ monthlyBudget: user.monthlyBudget });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to update budget' });
+  }
+});
+
 export default router;

@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
+import compression from 'compression';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import authRoutes from './routes/auth.js';
@@ -26,6 +27,7 @@ app.use(
       : { origin: true, credentials: true }
   )
 );
+app.use(compression());
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
