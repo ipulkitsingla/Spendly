@@ -189,8 +189,8 @@ export async function runPendingDebtReminder() {
   return stats;
 }
 
-export async function runMonthlyStatementEmail() {
-  const statementMonth = prevMonthKey();
+export async function runMonthlyStatementEmail(overrideMonth) {
+  const statementMonth = overrideMonth || prevMonthKey();
   const users = await User.find({}, { name: 1, email: 1, emailPreferences: 1 }).lean();
   const stats = {
     statementMonth,

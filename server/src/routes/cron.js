@@ -42,7 +42,8 @@ router.all('/pending-reminder', ensureCronAuth, async (req, res) => {
 
 router.all('/monthly-statement', ensureCronAuth, async (req, res) => {
   try {
-    const stats = await runMonthlyStatementEmail();
+    const month = req.query.month; // e.g. 2026-04
+    const stats = await runMonthlyStatementEmail(month);
     res.json({ ok: true, job: 'monthly-statement', stats });
   } catch (e) {
     res.status(500).json({ message: e?.message || 'monthly statement failed' });
