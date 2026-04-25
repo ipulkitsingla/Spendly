@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import { api } from '../api.js';
 import { formatMoney } from '../utils/format.js';
 
@@ -32,6 +32,8 @@ export default function AccountsPage() {
     return () => window.removeEventListener('spendly-sync-done', h);
   }, [load]);
 
+  const totalAssets = useMemo(() => accounts.reduce((sum, a) => sum + (Number(a.balance) || 0), 0), [accounts]);
+
   const addAccount = async (e) => {
     e.preventDefault();
     if (!newName.trim()) return;
@@ -57,6 +59,7 @@ export default function AccountsPage() {
   };
 
   const remove = async (id) => {
+    if (!window.confirm('Delete this account and all its transactions?')) return;
     setErr('');
     try {
       await api.deleteAccount(id);
@@ -113,146 +116,131 @@ export default function AccountsPage() {
   };
 
   return (
-    <>
+    <div className="accounts-container animate-fade-in">
       <header className="page-header">
         <h1>Accounts</h1>
       </header>
 
-      {err && <p style={{ color: 'var(--expense)', padding: '0 16px' }}>{err}</p>}
+      <section className="accounts-hero card animate-fade-up">
+        <div className="accounts-hero-glow" />
+        <p className="accounts-hero-label">Net Worth</p>
+        <h2 className="accounts-hero-amount">{formatMoney(totalAssets)}</h2>
+        <p className="accounts-hero-sub">Combined balance across {accounts.length} accounts</p>
+      </section>
 
-      <ul className="tx-list">
-        {accounts.map((a) => (
-          <li key={a._id} className="tx-row" style={{ gridTemplateColumns: '1fr auto' }}>
-            <div>
-              {editing === a._id ? (
-                <input
-                  className="input"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  style={{ marginBottom: 8 }}
-                />
-              ) : (
-                <div className="tx-title">{a.name}</div>
-              )}
-              <div className="tx-meta" style={{ textTransform: 'capitalize' }}>
-                {a.type}
+      {err && <p className="error-msg" style={{ margin: '0 16px 16px' }}>{err}</p>}
+
+      <div className="accounts-content">
+        <div className="section-title-row">
+          <h3>My Assets</h3>
+          <button type="button" className="btn-link" onClick={() => document.getElementById('new-acc-form')?.scrollIntoView({ behavior: 'smooth' })}>+ Add New</button>
+        </div>
+
+        <div className="accounts-grid">
+          {accounts.map((a) => (
+            <div key={a._id} className="card account-detail-card animate-fade-up">
+              <div className="acc-detail-head">
+                <div className="acc-type-icon">🏦</div>
+                <div className="acc-info-main">
+                  {editing === a._id ? (
+                    <input
+                      autoFocus
+                      className="input input-sm"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      onBlur={() => saveEdit(a._id)}
+                      onKeyDown={(e) => e.key === 'Enter' && saveEdit(a._id)}
+                    />
+                  ) : (
+                    <h4 className="acc-name-label" onClick={() => { setEditing(a._id); setEditName(a.name); }}>{a.name}</h4>
+                  )}
+                  <span className="acc-type-tag">{a.type}</span>
+                </div>
+                <div className="acc-balance-val">{formatMoney(a.balance)}</div>
+              </div>
+              
+              <div className="acc-actions-row">
+                <button type="button" className="btn btn-ghost btn-xs" onClick={() => openAdjust(a)}>Adjust Balance</button>
+                <div className="acc-more-actions">
+                  <button type="button" className="btn btn-ghost btn-xs" onClick={() => { setEditing(a._id); setEditName(a.name); }}>Rename</button>
+                  <button type="button" className="btn btn-ghost btn-xs text-danger" onClick={() => remove(a._id)}>Delete</button>
+                </div>
               </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div className="tx-amount">{formatMoney(a.balance)}</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'flex-end', marginTop: 8 }}>
-                {editing === a._id ? (
-                  <>
-                    <button type="button" className="btn btn-ghost" style={{ padding: '6px 10px' }} onClick={() => setEditing(null)}>
-                      Cancel
-                    </button>
-                    <button type="button" className="btn btn-primary" style={{ padding: '6px 10px' }} onClick={() => saveEdit(a._id)}>
-                      Save
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      className="btn btn-ghost"
-                      style={{ padding: '6px 10px' }}
-                      onClick={() => {
-                        setEditing(a._id);
-                        setEditName(a.name);
-                      }}
-                    >
-                      Rename
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-ghost"
-                      style={{ padding: '6px 10px' }}
-                      onClick={() => openAdjust(a)}
-                    >
-                      Set balance
-                    </button>
-                    <button type="button" className="btn btn-ghost" style={{ padding: '6px 10px' }} onClick={() => remove(a._id)}>
-                      Delete
-                    </button>
-                  </>
-                )}
-              </div>
+          ))}
+        </div>
+
+        <div className="accounts-forms-row">
+          <form id="new-acc-form" onSubmit={addAccount} className="card form-card animate-fade-up">
+            <div className="card-header-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <h4>New Account</h4>
             </div>
-          </li>
-        ))}
-      </ul>
+            <div className="form-group">
+              <input className="input" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. HDFC Bank" />
+            </div>
+            <button type="submit" className="btn btn-primary btn-sm btn-block">Create Account</button>
+          </form>
 
-      <div style={{ padding: '0 16px 24px' }}>
-        <form onSubmit={addAccount} className="card">
-          <strong>New account</strong>
-          <div className="field" style={{ marginTop: 12 }}>
-            <label className="label">Name</label>
-            <input className="input" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Savings" />
-          </div>
-          <button type="submit" className="btn btn-primary">
-            Add account
-          </button>
-        </form>
-
-        <form onSubmit={addCategory} className="card" style={{ marginTop: 16 }}>
-          <strong>Custom category</strong>
-          <div className="field" style={{ marginTop: 12 }}>
-            <label className="label">Name</label>
-            <input className="input" value={newCat} onChange={(e) => setNewCat(e.target.value)} placeholder="e.g. Subscriptions" />
-          </div>
-          <button type="submit" className="btn btn-primary">
-            Add category
-          </button>
-          <p style={{ color: 'var(--muted)', fontSize: '0.8rem', marginTop: 12, marginBottom: 0 }}>
-            Existing: {categories.map((c) => c.name).join(', ')}
-          </p>
-        </form>
+          <form onSubmit={addCategory} className="card form-card animate-fade-up">
+            <div className="card-header-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+              <h4>Custom Category</h4>
+            </div>
+            <div className="form-group">
+              <input className="input" value={newCat} onChange={(e) => setNewCat(e.target.value)} placeholder="e.g. Amazon Prime" />
+            </div>
+            <button type="submit" className="btn btn-primary btn-sm btn-block">Add Category</button>
+          </form>
+        </div>
       </div>
 
       {adjusting && (
-        <div className="modal-backdrop" role="presentation" onClick={() => !adjustBusy && setAdjusting(null)}>
-          <div className="modal" role="dialog" onClick={(e) => e.stopPropagation()}>
-            <h2>Set balance · {adjusting.name}</h2>
-            <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginTop: 0 }}>
-              Current: {formatMoney(adjusting.balance)}. Saving creates a <strong style={{ color: 'var(--balance-update)' }}>Balance update</strong>{' '}
-              transaction (reconciliation), not income or expense.
-            </p>
+        <div className="modal-backdrop" onClick={() => !adjustBusy && setAdjusting(null)}>
+          <div className="modal animate-pop-in" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">Balance Correction</h3>
+              <button type="button" className="btn-close" onClick={() => setAdjusting(null)}>×</button>
+            </div>
+            
+            <p className="modal-subtitle">Update balance for <strong>{adjusting.name}</strong>. This creates a reconciliation entry.</p>
+
             <form onSubmit={submitAdjust}>
-              <div className="field">
-                <label className="label">New balance (₹)</label>
+              <div className="form-group">
+                <label className="label">Current Balance: {formatMoney(adjusting.balance)}</label>
                 <input
+                  autoFocus
                   className="input"
-                  inputMode="decimal"
+                  type="number"
+                  step="0.01"
                   value={newBalanceStr}
                   onChange={(e) => setNewBalanceStr(e.target.value)}
                   required
                 />
               </div>
-              <div className="field">
-                <label className="label">Date</label>
+              <div className="form-group">
+                <label className="label">As of Date</label>
                 <input className="input" type="date" value={adjustDate} onChange={(e) => setAdjustDate(e.target.value)} />
               </div>
-              <div className="field">
-                <label className="label">Note (optional)</label>
+              <div className="form-group">
+                <label className="label">Note</label>
                 <input
                   className="input"
                   value={adjustNote}
                   onChange={(e) => setAdjustNote(e.target.value)}
-                  placeholder="e.g. Cash count correction"
+                  placeholder="Reason for adjustment"
                 />
               </div>
               <div className="modal-actions">
-                <button type="button" className="btn btn-ghost" disabled={adjustBusy} onClick={() => setAdjusting(null)}>
-                  Cancel
-                </button>
+                <button type="button" className="btn btn-ghost" disabled={adjustBusy} onClick={() => setAdjusting(null)}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={adjustBusy}>
-                  {adjustBusy ? 'Saving…' : 'Save & record update'}
+                  {adjustBusy ? 'Syncing...' : 'Update Balance'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

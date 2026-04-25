@@ -154,15 +154,19 @@ export default function Dashboard() {
 
   return (
     <>
-      <section className="balance-masthead">
+      <section className={`balance-masthead ${netMonth >= 0 ? 'mood-positive' : 'mood-negative'}`}>
+        <div className="security-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Secured by {credentialId ? 'Biometrics' : 'Spendly'}
+        </div>
         <p className="balance-masthead-label">
-          {accountFilter ? accountsById[accountFilter]?.name || 'Account' : 'Total balance'}
+          {accountFilter ? accountsById[accountFilter]?.name || 'Account' : 'Total Net Worth'}
         </p>
         <div className="balance-masthead-amount">
           <Money value={displayTotal} hero />
         </div>
         <p className="balance-masthead-sub">
-          {accountFilter ? 'Current balance in this account' : 'Across all your accounts'}
+          {accountFilter ? 'Current balance in this account' : 'Combined balance of all accounts'}
         </p>
         <div className="dashboard-hero-actions balance-masthead-actions">
           {!faceLock || !credentialId ? (
@@ -205,13 +209,57 @@ export default function Dashboard() {
             {faceErr}
           </p>
         )}
-        {!biometricReady && (!credentialId || !faceLock) && (
-          <p className="dashboard-hero-note">
-            Face ID / fingerprint is not available in this browser. Use Safari or Chrome on a device with a
-            secure screen lock.
-          </p>
-        )}
       </section>
+
+      {unveiled && (
+        <div className="account-carousel-wrap animate-fade-up">
+          <div className="carousel-header">
+            <strong>Accounts Breakdown</strong>
+            <button type="button" className="btn-link" onClick={() => setAccountFilter('')}>Clear Filter</button>
+          </div>
+          <div className="account-carousel">
+            <button 
+              type="button" 
+              className={`account-card-mini ${!accountFilter ? 'active' : ''}`}
+              onClick={() => setAccountFilter('')}
+            >
+              <div className="acc-icon">🏦</div>
+              <div className="acc-info">
+                <span className="acc-name">All Assets</span>
+                <span className="acc-bal">{formatMoney(accounts.reduce((s, a) => s + (Number(a.balance) || 0), 0))}</span>
+              </div>
+            </button>
+            {accounts.map((acc) => (
+              <button 
+                key={acc._id} 
+                type="button" 
+                className={`account-card-mini ${accountFilter === acc._id ? 'active' : ''}`}
+                onClick={() => setAccountFilter(acc._id)}
+              >
+                <div className="acc-icon">💳</div>
+                <div className="acc-info">
+                  <span className="acc-name">{acc.name}</span>
+                  <span className="acc-bal">{formatMoney(acc.balance)}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="quick-category-row">
+        {['Food', 'Shopping', 'Travel', 'Bills'].map((cat) => (
+          <button 
+            key={cat} 
+            type="button" 
+            className="quick-cat-btn"
+            onClick={() => setModal('expense')}
+          >
+            <span className="icon">{categoryIcon(cat)}</span>
+            <span>{cat}</span>
+          </button>
+        ))}
+      </div>
 
       <div className="month-bar">
         <button type="button" aria-label="Previous month" onClick={() => setMonth((m) => shiftMonth(m, -1))}>

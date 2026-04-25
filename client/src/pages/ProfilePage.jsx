@@ -77,199 +77,95 @@ export default function ProfilePage() {
   );
 
   return (
-    <>
-      <header className="page-header">
-        <h1>Profile</h1>
+    <div className="profile-container animate-fade-in">
+      <header className="profile-hero">
+        <div className="profile-hero-bg" />
+        <div className="profile-avatar-large">
+          {(user?.name || '?').slice(0, 1).toUpperCase()}
+        </div>
+        <h1 className="profile-user-name">{user?.name}</h1>
+        <p className="profile-user-email">{user?.email}</p>
+        <button type="button" className="btn btn-ghost btn-sm profile-logout-btn" onClick={logout}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Log Out
+        </button>
       </header>
 
-      <div className="profile-page">
-        <div className="card profile-card">
-          <div className="profile-avatar" aria-hidden>
-            {(user?.name || '?').slice(0, 1).toUpperCase()}
+      <div className="profile-content">
+        <section className="card export-card animate-fade-up">
+          <div className="card-header-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <h3>Generate Reports</h3>
           </div>
-          <div className="profile-field">
-            <span className="label">Name</span>
-            <p className="profile-value">{user?.name}</p>
-          </div>
-          <div className="profile-field">
-            <span className="label">Email</span>
-            <p className="profile-value">{user?.email}</p>
-          </div>
-        </div>
-
-        <section className="card export-pdf-card" aria-labelledby="export-pdf-title">
-          <div className="export-pdf-head">
-            <div className="export-pdf-icon" aria-hidden>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
-              </svg>
-            </div>
-            <div>
-              <h2 id="export-pdf-title" className="export-pdf-title">
-                Monthly statement
-              </h2>
-              <p className="export-pdf-desc">Download a clean PDF of transactions for any month — great for taxes or sharing.</p>
-            </div>
-          </div>
-
-          <div className="export-pdf-chips">
-            <button
-              type="button"
-              className={`export-chip ${exportMonth === monthKey() ? 'export-chip--active' : ''}`}
-              onClick={() => setExportMonth(monthKey())}
-            >
-              This month
-            </button>
-            <button
-              type="button"
-              className={`export-chip ${exportMonth === shiftMonth(monthKey(), -1) ? 'export-chip--active' : ''}`}
-              onClick={() => setExportMonth(shiftMonth(monthKey(), -1))}
-            >
-              Last month
-            </button>
-          </div>
-
-          <div className="export-pdf-fields">
-            <div className="export-pdf-field">
-              <label className="label" htmlFor="export-month">
-                Month
-              </label>
+          <p className="card-desc">Download your transaction history as a professional PDF statement.</p>
+          
+          <div className="export-options">
+            <div className="form-group">
+              <label className="label">Statement Month</label>
               <input
-                id="export-month"
-                className="input export-month-input"
+                className="input"
                 type="month"
                 value={exportMonth}
                 max={monthKey()}
                 onChange={(e) => setExportMonth(e.target.value)}
               />
-              <p className="export-pdf-preview">{monthLabel}</p>
             </div>
-            <div className="export-pdf-field">
-              <label className="label" htmlFor="export-account">
-                Scope
-              </label>
+            <div className="form-group">
+              <label className="label">Account Scope</label>
               <select
-                id="export-account"
                 className="input"
                 value={exportAccountId}
                 onChange={(e) => setExportAccountId(e.target.value)}
               >
-                <option value="">All accounts (net worth)</option>
+                <option value="">All Accounts (Net Worth)</option>
                 {accounts.map((a) => (
-                  <option key={a._id} value={a._id}>
-                    {a.name}
-                  </option>
+                  <option key={a._id} value={a._id}>{a.name}</option>
                 ))}
               </select>
             </div>
           </div>
 
-          {pdfErr && (
-            <p className="export-pdf-err" role="alert">
-              {pdfErr}
-            </p>
-          )}
-
           <button
             type="button"
-            className="btn btn-primary export-pdf-btn"
+            className="btn btn-primary btn-block export-btn"
             disabled={pdfLoading}
             onClick={onDownloadPdf}
           >
-            {pdfLoading ? (
-              <span className="export-pdf-btn-inner">
-                <span className="export-spinner" aria-hidden />
-                Building PDF…
-              </span>
-            ) : (
-              <span className="export-pdf-btn-inner">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                Download PDF
-              </span>
-            )}
+            {pdfLoading ? 'Building PDF...' : 'Download PDF Statement'}
           </button>
+          {pdfErr && <p className="error-text">{pdfErr}</p>}
         </section>
 
-        <div className="card profile-settings-card">
-          <h2 className="profile-section-title">Email notifications</h2>
-          <p className="profile-hint">Control monthly statements, reminders, and welcome emails for this account.</p>
-          <div className="profile-email-prefs">
-            <button
-              type="button"
-              className="profile-pref-row"
-              onClick={() => onTogglePref('monthlyStatement')}
-              disabled={emailPrefSaving === 'monthlyStatement'}
-            >
-              <div>
-                <strong>Monthly statement (1st day)</strong>
-                <span>Receive statement email with PDF attachment.</span>
-              </div>
-              <span className={`profile-pref-pill ${emailPrefs.monthlyStatement ? 'on' : 'off'}`}>
-                {emailPrefSaving === 'monthlyStatement' ? 'Saving...' : emailPrefs.monthlyStatement ? 'On' : 'Off'}
-              </span>
-            </button>
-            <button
-              type="button"
-              className="profile-pref-row"
-              onClick={() => onTogglePref('expenseReminder')}
-              disabled={emailPrefSaving === 'expenseReminder'}
-            >
-              <div>
-                <strong>Expense reminder (9PM)</strong>
-                <span>Daily reminder to add today&apos;s expenses.</span>
-              </div>
-              <span className={`profile-pref-pill ${emailPrefs.expenseReminder ? 'on' : 'off'}`}>
-                {emailPrefSaving === 'expenseReminder' ? 'Saving...' : emailPrefs.expenseReminder ? 'On' : 'Off'}
-              </span>
-            </button>
-            <button
-              type="button"
-              className="profile-pref-row"
-              onClick={() => onTogglePref('pendingDebtReminder')}
-              disabled={emailPrefSaving === 'pendingDebtReminder'}
-            >
-              <div>
-                <strong>Pending debt reminder (10PM)</strong>
-                <span>Daily reminder when there are pending debts.</span>
-              </div>
-              <span className={`profile-pref-pill ${emailPrefs.pendingDebtReminder ? 'on' : 'off'}`}>
-                {emailPrefSaving === 'pendingDebtReminder' ? 'Saving...' : emailPrefs.pendingDebtReminder ? 'On' : 'Off'}
-              </span>
-            </button>
-            <button
-              type="button"
-              className="profile-pref-row"
-              onClick={() => onTogglePref('welcomeSignup')}
-              disabled={emailPrefSaving === 'welcomeSignup'}
-            >
-              <div>
-                <strong>Welcome signup email</strong>
-                <span>Receive welcome email after account registration.</span>
-              </div>
-              <span className={`profile-pref-pill ${emailPrefs.welcomeSignup ? 'on' : 'off'}`}>
-                {emailPrefSaving === 'welcomeSignup' ? 'Saving...' : emailPrefs.welcomeSignup ? 'On' : 'Off'}
-              </span>
-            </button>
+        <section className="card settings-card animate-fade-up">
+          <div className="card-header-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"/></svg>
+            <h3>Notifications</h3>
           </div>
-          {emailPrefErr && (
-            <p className="profile-email-err" role="alert">
-              {emailPrefErr}
-            </p>
-          )}
+          
+          <div className="pref-list">
+            {[
+              { key: 'monthlyStatement', title: 'Monthly Summary', desc: 'Auto-email on the 1st' },
+              { key: 'expenseReminder', title: 'Daily Reminder', desc: 'Add expenses at 9 PM' },
+              { key: 'pendingDebtReminder', title: 'Debt Alerts', desc: 'Pending items at 10 PM' },
+            ].map((pref) => (
+              <div key={pref.key} className="pref-row" onClick={() => onTogglePref(pref.key)}>
+                <div className="pref-info">
+                  <span className="pref-title">{pref.title}</span>
+                  <span className="pref-desc">{pref.desc}</span>
+                </div>
+                <div className={`pref-toggle ${emailPrefs[pref.key] ? 'on' : 'off'}`}>
+                  <div className="toggle-handle" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
-          <h2 className="profile-section-title">Session</h2>
-          <p className="profile-hint">Sign out on this device. You will need your password to sign in again.</p>
-          <button type="button" className="btn btn-ghost profile-logout" onClick={() => logout()}>
-            Log out
-          </button>
-          <div className="profile-app-version">App version {APP_VERSION}</div>
+        <div className="profile-footer">
+          <p className="app-info">Spendly Premium • {APP_VERSION}</p>
+          <p className="app-copyright">© 2026 Spendly Inc.</p>
         </div>
       </div>
-    </>
+    </div>
   );
 }
