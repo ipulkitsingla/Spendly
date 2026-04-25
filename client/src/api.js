@@ -378,25 +378,4 @@ export const api = {
       body: JSON.stringify({ prompt }),
     });
   },
-  spendiChat: async (prompt, history = []) => {
-    if (!browserOnline()) {
-      throw new Error('SPENDI needs an internet connection.');
-    }
-    return rawRequest('/api/ai/chat', {
-      method: 'POST',
-      body: JSON.stringify({ prompt, history }),
-    });
-  },
-  spendiHistory: async () => {
-    if (!browserOnline()) {
-      throw new Error('SPENDI history needs an internet connection.');
-    }
-    return rawRequest('/api/ai/history');
-  },
-  clearSpendiHistory: async () => {
-    if (!browserOnline()) {
-      throw new Error('SPENDI history needs an internet connection.');
-    }
-    return rawRequest('/api/ai/history', { method: 'DELETE' });
-  },
 };

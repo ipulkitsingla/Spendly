@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api.js';
 import { usePrivacy } from '../context/PrivacyContext.jsx';
 import { formatMonthLong } from '../utils/dates.js';
 import { formatDay, formatMoney, monthKey, shiftMonth } from '../utils/format.js';
 import { categoryIcon } from '../utils/categoryIcons.js';
+import { parseVoiceAdd } from '../utils/voiceAdd.js';
+import { hapticError, hapticLight, hapticSuccess } from '../utils/haptics.js';
 import Money from '../components/Money.jsx';
 import QuickAddFab from '../components/QuickAddFab.jsx';
 import TxModals from '../components/TxModals.jsx';
@@ -58,6 +60,9 @@ export default function Dashboard() {
   const [err, setErr] = useState('');
   const [incomeHidden, setIncomeHidden] = useState(true);
   const [netHidden, setNetHidden] = useState(true);
+  const [voiceStatus, setVoiceStatus] = useState('');
+  const [voiceListening, setVoiceListening] = useState(false);
+  const recognitionRef = useRef(null);
 
   const loadMeta = useCallback(async () => {
     const [accs, cats] = await Promise.all([api.accounts(), api.categories()]);
@@ -104,6 +109,19 @@ export default function Dashboard() {
     return () => window.removeEventListener('spendly-sync-done', onSynced);
   }, [refresh]);
 
+  useEffect(
+    () => () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch {
+          /* no-op */
+        }
+      }
+    },
+    []
+  );
+
   const accountsById = useMemo(
     () => Object.fromEntries(accounts.map((a) => [String(a._id), a])),
     [accounts]
@@ -137,6 +155,87 @@ export default function Dashboard() {
         toAccountId: editTx.toAccountId ? String(editTx.toAccountId) : '',
       }
     : null;
+
+  const runVoiceAdd = useCallback(async () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      hapticError();
+      setVoiceStatus('Voice input is not supported in this browser.');
+      return;
+    }
+    if (!accounts.length) {
+      hapticError();
+      setVoiceStatus('Create an account first to use Voice Add.');
+      return;
+    }
+
+    setVoiceStatus('Listening… say "log ₹120 lunch".');
+    setVoiceListening(true);
+    hapticLight();
+
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+    recognition.lang = 'en-IN';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.continuous = false;
+
+    recognition.onresult = async (event) => {
+      const heard = event.results?.[0]?.[0]?.transcript || '';
+      const parsed = parseVoiceAdd(heard, { categories, accounts });
+      if (!parsed.ok) {
+        hapticError();
+        setVoiceStatus(parsed.message);
+        return;
+      }
+
+      const chosenAccountId = parsed.accountHint?.accountId || accountFilter || accounts[0]?._id;
+      if (!chosenAccountId) {
+        hapticError();
+        setVoiceStatus('No account available to add transaction.');
+        return;
+      }
+
+      try {
+        await api.createTransaction({
+          ...parsed.payload,
+          accountId: chosenAccountId,
+          date: new Date().toISOString(),
+        });
+        await refresh();
+        hapticSuccess();
+        const accLabel = parsed.accountHint?.accountName
+          ? ` from ${parsed.accountHint.accountName}`
+          : chosenAccountId && accountsById[String(chosenAccountId)]?.name
+            ? ` from ${accountsById[String(chosenAccountId)].name}`
+            : '';
+        setVoiceStatus(
+          `Added ${parsed.payload.type} ${formatMoney(parsed.payload.amount)} for ${parsed.payload.category}${accLabel}.`
+        );
+      } catch (e) {
+        hapticError();
+        setVoiceStatus(e.message || 'Could not add voice transaction.');
+      }
+    };
+
+    recognition.onerror = (event) => {
+      hapticError();
+      if (event.error === 'not-allowed') {
+        setVoiceStatus('Microphone permission denied.');
+      } else if (event.error === 'no-speech') {
+        setVoiceStatus('No speech detected. Try again.');
+      } else {
+        setVoiceStatus('Voice recognition failed. Try again.');
+      }
+    };
+
+    recognition.onend = () => {
+      setVoiceListening(false);
+      recognitionRef.current = null;
+    };
+
+    recognition.start();
+  }, [accounts, accountFilter, categories, refresh, accountsById]);
 
   return (
     <>
@@ -223,6 +322,17 @@ export default function Dashboard() {
             </option>
           ))}
         </select>
+        <div className="dashboard-voice-row">
+          <button
+            type="button"
+            className={`btn btn-ghost dashboard-voice-btn${voiceListening ? ' dashboard-voice-btn--live' : ''}`}
+            onClick={runVoiceAdd}
+            disabled={voiceListening}
+          >
+            {voiceListening ? 'Listening…' : 'Voice Add'}
+          </button>
+          {voiceStatus && <p className="dashboard-voice-status">{voiceStatus}</p>}
+        </div>
       </div>
 
       {err && <p style={{ color: 'var(--expense)', padding: '0 16px' }}>{err}</p>}

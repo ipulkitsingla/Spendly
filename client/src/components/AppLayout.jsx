@@ -4,7 +4,6 @@ import { browserOnline } from '../offline/networkState.js';
 import { drainOutbox } from '../offline/sync.js';
 import { outboxCount } from '../offline/store.js';
 import { hapticLight } from '../utils/haptics.js';
-import SpendiAssistant from './SpendiAssistant.jsx';
 
 export default function AppLayout() {
   const location = useLocation();
@@ -102,7 +101,6 @@ export default function AppLayout() {
           Me
         </NavLink>
       </nav>
-      <SpendiAssistant />
     </div>
   );
 }
