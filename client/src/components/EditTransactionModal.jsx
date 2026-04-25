@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../api.js';
 import { hapticError, hapticLight, hapticSuccess } from '../utils/haptics.js';
 
@@ -23,8 +23,30 @@ export default function EditTransactionModal({ tx, accounts, categories = [], on
   const [toId, setToId] = useState(tx.toAccountId || '');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const primaryInputRef = useRef(null);
 
   if (!tx) return null;
+
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    const prevOverscroll = document.body.style.overscrollBehavior;
+    document.body.style.overflow = 'hidden';
+    document.body.style.overscrollBehavior = 'none';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.overscrollBehavior = prevOverscroll;
+    };
+  }, []);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      primaryInputRef.current?.focus();
+      if (typeof primaryInputRef.current?.select === 'function') {
+        primaryInputRef.current.select();
+      }
+    });
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -137,6 +159,7 @@ export default function EditTransactionModal({ tx, accounts, categories = [], on
           {tx.type === 'balance_update' ? (
             <Field label="Account balance after update (₹)">
               <input
+                ref={primaryInputRef}
                 className="input"
                 inputMode="decimal"
                 value={newBalance}
@@ -147,6 +170,7 @@ export default function EditTransactionModal({ tx, accounts, categories = [], on
           ) : (
             <Field label="Amount (₹)">
               <input
+                ref={primaryInputRef}
                 className="input"
                 inputMode="decimal"
                 value={amount}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../api.js';
 import { hapticError, hapticLight, hapticSuccess } from '../utils/haptics.js';
 
@@ -23,6 +23,30 @@ export default function TxModals({ mode, onClose, accounts, categories = [], onS
   const [personName, setPersonName] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const primaryInputRef = useRef(null);
+
+  useEffect(() => {
+    if (!mode) return undefined;
+    const prevOverflow = document.body.style.overflow;
+    const prevOverscroll = document.body.style.overscrollBehavior;
+    document.body.style.overflow = 'hidden';
+    document.body.style.overscrollBehavior = 'none';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.overscrollBehavior = prevOverscroll;
+    };
+  }, [mode]);
+
+  useEffect(() => {
+    if (!mode) return undefined;
+    const id = requestAnimationFrame(() => {
+      primaryInputRef.current?.focus();
+      if (typeof primaryInputRef.current?.select === 'function') {
+        primaryInputRef.current.select();
+      }
+    });
+    return () => cancelAnimationFrame(id);
+  }, [mode]);
 
   const reset = () => {
     setAmount('');
@@ -104,9 +128,9 @@ export default function TxModals({ mode, onClose, accounts, categories = [], onS
           note,
         });
       }
-      onSaved();
       hapticSuccess();
-      close();
+      close();   // restores body overflow before refresh triggers scroll-restore
+      onSaved();
     } catch (ex) {
       hapticError();
       setErr(ex.message);
@@ -124,6 +148,7 @@ export default function TxModals({ mode, onClose, accounts, categories = [], onS
           {mode === 'pending' && (
             <Field label="Person">
               <input
+                ref={primaryInputRef}
                 className="input"
                 value={personName}
                 onChange={(e) => setPersonName(e.target.value)}
@@ -134,6 +159,7 @@ export default function TxModals({ mode, onClose, accounts, categories = [], onS
           )}
           <Field label="Amount">
             <input
+              ref={mode === 'pending' ? null : primaryInputRef}
               className="input"
               inputMode="decimal"
               value={amount}

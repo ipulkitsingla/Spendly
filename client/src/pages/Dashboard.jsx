@@ -5,7 +5,6 @@ import { formatMonthLong } from '../utils/dates.js';
 import { formatDay, formatMoney, monthKey, shiftMonth } from '../utils/format.js';
 import { categoryIcon } from '../utils/categoryIcons.js';
 import Money from '../components/Money.jsx';
-import QuickAddFab from '../components/QuickAddFab.jsx';
 import TxModals from '../components/TxModals.jsx';
 import EditTransactionModal from '../components/EditTransactionModal.jsx';
 import SwipeableRow from '../components/SwipeableRow.jsx';
@@ -71,8 +70,16 @@ export default function Dashboard() {
   }, [month, accountFilter]);
 
   const refresh = useCallback(() => {
-    loadMeta().catch((e) => setErr(e.message));
-    loadTx().catch((e) => setErr(e.message));
+    // Preserve scroll position so the list doesn't jump to bottom when new data arrives
+    const scrollY = window.scrollY;
+    Promise.all([
+      loadMeta().catch((e) => setErr(e.message)),
+      loadTx().catch((e) => setErr(e.message)),
+    ]).then(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollY, behavior: 'instant' });
+      });
+    });
   }, [loadMeta, loadTx]);
 
   const deleteTx = useCallback(
@@ -103,6 +110,15 @@ export default function Dashboard() {
     window.addEventListener('spendly-sync-done', onSynced);
     return () => window.removeEventListener('spendly-sync-done', onSynced);
   }, [refresh]);
+
+  useEffect(() => {
+    const onQuickAdd = (event) => {
+      const mode = event?.detail?.mode;
+      if (mode) setModal(mode);
+    };
+    window.addEventListener('spendly-open-quick-add', onQuickAdd);
+    return () => window.removeEventListener('spendly-open-quick-add', onQuickAdd);
+  }, []);
 
   const accountsById = useMemo(
     () => Object.fromEntries(accounts.map((a) => [String(a._id), a])),
@@ -377,7 +393,6 @@ export default function Dashboard() {
         </ul>
       )}
 
-      <QuickAddFab onPick={setModal} />
       <TxModals
         key={modal || 'closed'}
         mode={modal}

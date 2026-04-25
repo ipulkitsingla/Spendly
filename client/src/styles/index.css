@@ -147,7 +147,7 @@ button {
   justify-content: center;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 1200px) {
   .app-shell {
     max-width: 1100px;
     padding: 0 24px 32px;
@@ -169,12 +169,12 @@ button {
   }
 
   .bottom-nav {
-    display: none;
+    display: none !important;
   }
 
   .fab-wrap {
-    right: 32px;
-    bottom: 32px;
+    right: 32px !important;
+    bottom: 32px !important;
   }
 }
 
@@ -353,10 +353,14 @@ button {
 }
 
 .fab-wrap {
-  position: fixed;
-  right: 20px;
-  bottom: calc(var(--nav-h) + var(--safe-bottom) + 16px);
-  z-index: 50;
+  position: fixed !important;
+  right: max(16px, env(safe-area-inset-right)) !important;
+  bottom: calc(var(--nav-h) + var(--safe-bottom) + 20px) !important;
+  z-index: 120 !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto;
 }
 
 .fab-main {
@@ -694,103 +698,6 @@ button {
 
 .dashboard-filter-row {
   padding: 0 16px 18px;
-}
-
-.spendi-wrap {
-  position: fixed;
-  left: 18px;
-  bottom: calc(var(--nav-h) + var(--safe-bottom) + 84px);
-  z-index: 70;
-}
-
-@media (min-width: 900px) {
-  .spendi-wrap {
-    left: 32px;
-    bottom: 32px;
-  }
-}
-
-.spendi-fab {
-  width: 54px;
-  height: 54px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: linear-gradient(145deg, #6366f1, #8b5cf6);
-  color: #fff;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  box-shadow: 0 12px 30px rgba(99, 102, 241, 0.35);
-}
-
-.spendi-panel {
-  width: min(360px, calc(100vw - 24px));
-  height: 460px;
-  margin-bottom: 12px;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: 10px;
-}
-
-.spendi-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.spendi-head-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.spendi-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.spendi-chip {
-  border: 1px solid var(--border);
-  background: rgba(99, 102, 241, 0.08);
-  color: var(--text);
-  padding: 7px 10px;
-  border-radius: 999px;
-  font-size: 0.76rem;
-  line-height: 1.2;
-}
-
-.spendi-messages {
-  overflow: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 10px;
-  background: var(--surface);
-  display: grid;
-  gap: 8px;
-}
-
-.spendi-msg {
-  padding: 9px 10px;
-  border-radius: 12px;
-  font-size: 0.86rem;
-  line-height: 1.35;
-  white-space: pre-wrap;
-}
-
-.spendi-msg-ai {
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-}
-
-.spendi-msg-user {
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.2);
-}
-
-.spendi-input-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
 }
 
 .dashboard-month-running {
@@ -1228,43 +1135,76 @@ html[data-theme='light'] .export-spinner {
   letter-spacing: 0.08em;
 }
 
+/* Modal backdrop — bottom-sheet on mobile, centered on desktop */
 .modal-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(2, 6, 23, 0.55);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
-  z-index: 100;
+  z-index: 220;
   display: flex;
-  align-items: flex-end;
+  align-items: flex-end;      /* bottom-sheet: stick to bottom */
   justify-content: center;
-  padding: 0;
 }
 
+.modal {
+  background: linear-gradient(165deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.97));
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  /* rounded only on top corners for bottom-sheet feel */
+  border-radius: var(--radius) var(--radius) 0 0;
+  width: 100%;
+  max-width: 100%;
+  /* sheet can grow up to 90% of the viewport, always scrollable */
+  max-height: 90dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 8px 20px calc(20px + var(--safe-bottom)) 20px;
+  box-shadow: 0 -8px 48px rgba(0, 0, 0, 0.55);
+  position: relative;
+}
+
+/* Drag-handle pill at top of sheet */
+.modal::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  margin: 0 auto 16px;
+}
+
+/* Desktop: centered dialog */
 @media (min-width: 600px) {
   .modal-backdrop {
     align-items: center;
     padding: 24px;
   }
-}
 
-.modal {
-  background: linear-gradient(165deg, rgba(30, 41, 59, 0.75), rgba(15, 23, 42, 0.88));
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: var(--radius) var(--radius) 0 0;
-  width: 100%;
-  max-width: 480px;
-  max-height: 90dvh;
-  overflow: auto;
-  padding: 20px;
-  box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.45);
-}
-
-@media (min-width: 600px) {
   .modal {
     border-radius: var(--radius);
+    max-width: 480px;
+    max-height: calc(100dvh - 48px);
+    padding: 24px;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45);
+  }
+
+  .modal::before {
+    display: none;
+  }
+}
+
+@media (min-width: 1200px) {
+  .modal-backdrop {
+    padding: 24px;
+  }
+
+  .modal {
+    max-height: calc(100dvh - 48px);
   }
 }
 
@@ -1291,7 +1231,7 @@ html[data-theme='light'] .export-spinner {
   gap: 8px;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 1200px) {
   .desktop-nav {
     display: flex;
   }
@@ -1366,7 +1306,7 @@ html[data-theme='light'] .export-spinner {
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
@@ -1388,7 +1328,7 @@ html[data-theme='light'] .export-spinner {
 .route-transition {
   width: 100%;
   min-height: 100%;
-  will-change: transform, opacity;
+  will-change: opacity;
 }
 
 .route-transition--enter {
@@ -1402,7 +1342,7 @@ html[data-theme='light'] .export-spinner {
   }
   to {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
+    transform: none;
   }
 }
 
@@ -1439,7 +1379,25 @@ html[data-theme='light'] .export-spinner {
 }
 
 .modal {
-  animation: popIn 180ms ease both;
+  animation: sheetSlideUp 240ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@keyframes sheetSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Desktop keeps the pop-in animation */
+@media (min-width: 600px) {
+  .modal {
+    animation: popIn 180ms ease both;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
