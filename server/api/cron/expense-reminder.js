@@ -1,4 +1,4 @@
-import { runExpenseReminder } from '../../src/services/reminderScheduler.js';
+import { runExpenseReminder } from '../../services/reminderScheduler.js';
 
 export default async function handler(req, res) {
   await runExpenseReminder();
