@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../api.js';
 
 function Field({ label, children }) {
@@ -19,6 +19,13 @@ export default function EditPendingModal({ item, categories = [], onClose, onSav
   const [note, setNote] = useState(item.note || '');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [suggestedNotes, setSuggestedNotes] = useState([]);
+
+  useEffect(() => {
+    if (item) {
+      api.notes().then(setSuggestedNotes).catch(() => {});
+    }
+  }, [item]);
 
   if (!item || item.status !== 'pending') return null;
 
@@ -92,7 +99,10 @@ export default function EditPendingModal({ item, categories = [], onClose, onSav
             <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </Field>
           <Field label="Note">
-            <input className="input" value={note} onChange={(e) => setNote(e.target.value)} />
+            <input className="input" list={note.trim().length > 0 ? "edit-pending-notes" : undefined} value={note} onChange={(e) => setNote(e.target.value)} />
+            <datalist id="edit-pending-notes">
+              {suggestedNotes.map(n => <option key={n} value={n} />)}
+            </datalist>
           </Field>
           <div className="modal-actions">
             <button type="button" className="btn btn-ghost" disabled={busy} onClick={remove}>

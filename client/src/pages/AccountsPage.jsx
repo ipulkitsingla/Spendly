@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { formatMoney } from '../utils/format.js';
 
 export default function AccountsPage() {
+  const navigate = useNavigate();
   const [accounts, setAccounts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [newName, setNewName] = useState('');
@@ -160,6 +162,7 @@ export default function AccountsPage() {
               </div>
               
               <div className="acc-actions-row">
+                <button type="button" className="btn btn-ghost btn-xs text-primary" onClick={() => navigate(`/?accountId=${a._id}`)}>Transactions</button>
                 <button type="button" className="btn btn-ghost btn-xs" onClick={() => openAdjust(a)}>Adjust Balance</button>
                 <div className="acc-more-actions">
                   <button type="button" className="btn btn-ghost btn-xs" onClick={() => { setEditing(a._id); setEditName(a.name); }}>Rename</button>

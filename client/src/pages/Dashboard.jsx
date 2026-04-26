@@ -11,6 +11,7 @@ import TxModals from '../components/TxModals.jsx';
 import EditTransactionModal from '../components/EditTransactionModal.jsx';
 import SwipeableRow from '../components/SwipeableRow.jsx';
 import BiometricOverlay from '../components/BiometricOverlay.jsx';
+import { useSearchParams } from 'react-router-dom';
 
 function txTitle(tx) {
   if (tx.type === 'transfer') {
@@ -64,8 +65,19 @@ export default function Dashboard() {
   const [showBudgetModal, setShowBudgetModal] = useState(false);
   const [budgetInput, setBudgetInput] = useState('');
 
+  const [searchParams, setSearchParams] = useSearchParams();
   const [month, setMonth] = useState(() => monthKey());
-  const [accountFilter, setAccountFilter] = useState('');
+  const [accountFilter, setAccountFilter] = useState(() => searchParams.get('accountId') || '');
+
+  const updateAccountFilter = useCallback((val) => {
+    setAccountFilter(val);
+    setSearchParams((prev) => {
+      const p = new URLSearchParams(prev);
+      if (val) p.set('accountId', val);
+      else p.delete('accountId');
+      return p;
+    });
+  }, [setSearchParams]);
   const [accounts, setAccounts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [bundle, setBundle] = useState(null);
@@ -230,13 +242,13 @@ export default function Dashboard() {
         <div className="account-carousel-wrap animate-fade-up">
           <div className="carousel-header">
             <strong>Accounts Breakdown</strong>
-            <button type="button" className="btn-link" onClick={() => setAccountFilter('')}>Clear Filter</button>
+            <button type="button" className="btn-link" onClick={() => updateAccountFilter('')}>Clear Filter</button>
           </div>
           <div className="account-carousel">
             <button 
               type="button" 
               className={`account-card-mini ${!accountFilter ? 'active' : ''}`}
-              onClick={() => setAccountFilter('')}
+              onClick={() => updateAccountFilter('')}
             >
               <div className="acc-icon">🏦</div>
               <div className="acc-info">
@@ -249,7 +261,7 @@ export default function Dashboard() {
                 key={acc._id} 
                 type="button" 
                 className={`account-card-mini ${accountFilter === acc._id ? 'active' : ''}`}
-                onClick={() => setAccountFilter(acc._id)}
+                onClick={() => updateAccountFilter(acc._id)}
               >
                 <div className="acc-icon">💳</div>
                 <div className="acc-info">
@@ -291,7 +303,7 @@ export default function Dashboard() {
         <select
           className="input"
           value={accountFilter}
-          onChange={(e) => setAccountFilter(e.target.value)}
+          onChange={(e) => updateAccountFilter(e.target.value)}
         >
           <option value="">All accounts (net worth)</option>
           {accounts.map((a) => (

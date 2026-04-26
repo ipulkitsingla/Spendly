@@ -166,6 +166,10 @@ export const api = {
     if (!browserOnline()) throw new Error('Delete accounts when you are back online.');
     return rawRequest(`/api/accounts/${id}`, { method: 'DELETE' });
   },
+  notes: () => {
+    if (!browserOnline()) return Promise.resolve([]);
+    return rawRequest('/api/transactions/notes');
+  },
   transactions: (month, accountId) => {
     const q = new URLSearchParams({ month });
     if (accountId) q.set('accountId', accountId);

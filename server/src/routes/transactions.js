@@ -64,10 +64,19 @@ router.get('/', async (req, res) => {
       opening = cur - effect;
     }
 
-    const monthTxs = await Transaction.find({
+    const filter = {
       userId,
       date: { $gte: start, $lt: end },
-    })
+    };
+    if (accountId) {
+      filter.$or = [
+        { accountId },
+        { fromAccountId: accountId },
+        { toAccountId: accountId },
+      ];
+    }
+
+    const monthTxs = await Transaction.find(filter)
       .sort({ date: -1, _id: -1 })
       .lean();
 
@@ -124,6 +133,19 @@ router.get('/', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to load transactions' });
+  }
+});
+
+router.get('/notes', async (req, res) => {
+  try {
+    const notes = await Transaction.distinct('note', { 
+      userId: req.userId, 
+      note: { $nin: ['', null] } 
+    });
+    res.json(notes);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to load notes' });
   }
 });
 

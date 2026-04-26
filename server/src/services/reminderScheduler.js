@@ -86,13 +86,10 @@ export async function runExpenseReminder() {
       stats.optedOut += 1;
       continue;
     }
-    // Daily limit removed per user request
-    /*
     if (await wasSent(user._id, 'daily_expense_reminder', periodKey)) {
       stats.alreadySent += 1;
       continue;
     }
-    */
     try {
       await sendEmail({
         to: user.email,
@@ -153,13 +150,10 @@ export async function runPendingDebtReminder() {
       stats.optedOut += 1;
       continue;
     }
-    // Daily limit removed per user request
-    /*
     if (await wasSent(user._id, 'daily_pending_reminder', periodKey)) {
       stats.alreadySent += 1;
       continue;
     }
-    */
       try {
         const pendingItems = await PendingTransaction.find({
           userId: user._id,
@@ -266,13 +260,10 @@ export async function runMonthlyStatementEmail(overrideMonth) {
       continue;
     }
     const periodKey = statementMonth;
-    // Monthly limit removed per user request
-    /*
     if (await wasSent(user._id, 'monthly_statement', periodKey)) {
       stats.alreadySent += 1;
       continue;
     }
-    */
     try {
       const statement = await buildMonthlyStatement(user._id, statementMonth);
       const pdfBuffer = await buildStatementPdfBuffer({

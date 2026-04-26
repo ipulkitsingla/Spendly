@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../api.js';
 
 function Field({ label, children }) {
@@ -22,6 +22,13 @@ export default function EditTransactionModal({ tx, accounts, categories = [], on
   const [toId, setToId] = useState(tx.toAccountId || '');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [suggestedNotes, setSuggestedNotes] = useState([]);
+
+  useEffect(() => {
+    if (tx) {
+      api.notes().then(setSuggestedNotes).catch(() => {});
+    }
+  }, [tx]);
 
   if (!tx) return null;
 
@@ -205,7 +212,10 @@ export default function EditTransactionModal({ tx, accounts, categories = [], on
             <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </Field>
           <Field label="Note">
-            <input className="input" value={note} onChange={(e) => setNote(e.target.value)} />
+            <input className="input" list={note.trim().length > 0 ? "edit-tx-notes-list" : undefined} value={note} onChange={(e) => setNote(e.target.value)} />
+            <datalist id="edit-tx-notes-list">
+              {suggestedNotes.map(n => <option key={n} value={n} />)}
+            </datalist>
           </Field>
 
           <div className="modal-actions">
