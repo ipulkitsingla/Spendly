@@ -10,48 +10,92 @@ export function buildStatementPdfBuffer({ statement, userName, userEmail }) {
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
-    doc.rect(0, 0, doc.page.width, 85).fill('#10b981');
-    doc.fillColor('#ffffff').fontSize(22).text('Spendly', 40, 26, { continued: true });
-    doc.fontSize(12).text('  Monthly Statement', { baseline: 'middle' });
-    doc.fontSize(10).text(statement.monthLabel, { align: 'right' });
+    doc.rect(0, 0, doc.page.width, 95).fill('#0f172a');
+    doc.fillColor('#ffffff').fontSize(26).font('Helvetica-Bold').text('Spendly', 40, 32);
+    doc.fontSize(13).font('Helvetica').text('Monthly Statement', 40, 68);
+    doc.fontSize(11).text(statement.monthLabel, doc.page.width - 40 - 200, 36, { align: 'right', width: 200 });
 
-    doc.fillColor('#0f172a').fontSize(10);
-    doc.text(`Prepared for: ${userName || 'User'}${userEmail ? ` (${userEmail})` : ''}`, 40, 98);
-    doc.text(`Transactions: ${statement.transactionCount}`, 40, 114);
+    doc.fillColor('#0f172a').fontSize(10).font('Helvetica-Bold');
+    doc.text('Prepared for', 40, 120);
+    doc.font('Helvetica').text(`${userName || 'User'}${userEmail ? ` · ${userEmail}` : ''}`, 40, 135);
 
-    doc.roundedRect(40, 132, 515, 88, 8).fill('#f1f5f9');
-    doc.fillColor('#334155').fontSize(11);
-    doc.text(`Opening: ${formatInr(statement.openingBalance)}`, 52, 147);
-    doc.text(`Income: ${formatInr(statement.income)}`, 52, 164);
-    doc.text(`Expenses: ${formatInr(statement.expenses)}`, 52, 181);
-    doc.text(`Net: ${formatInr(statement.net)}`, 290, 147);
-    doc.text(`Closing: ${formatInr(statement.closingBalance)}`, 290, 164);
+    const boxY = 160;
+    doc.roundedRect(40, boxY, 515, 65, 4).fillAndStroke('#f8fafc', '#e2e8f0');
+    doc.fillColor('#64748b').fontSize(9).font('Helvetica-Bold');
+    
+    const colW = 103;
+    doc.text('OPENING', 40, boxY + 16, { width: colW, align: 'center' });
+    doc.text('INCOME', 40 + colW, boxY + 16, { width: colW, align: 'center' });
+    doc.text('EXPENSES', 40 + colW * 2, boxY + 16, { width: colW, align: 'center' });
+    doc.text('NET', 40 + colW * 3, boxY + 16, { width: colW, align: 'center' });
+    doc.text('CLOSING', 40 + colW * 4, boxY + 16, { width: colW, align: 'center' });
 
-    let y = 245;
-    doc.fillColor('#0f172a').fontSize(10).text('Date', 40, y);
-    doc.text('Details', 105, y);
-    doc.text('Type', 330, y);
-    doc.text('Amount', 400, y, { width: 70, align: 'right' });
-    doc.text('Running', 480, y, { width: 70, align: 'right' });
-    y += 16;
-    doc.moveTo(40, y - 6).lineTo(555, y - 6).strokeColor('#cbd5e1').stroke();
+    doc.fillColor('#0f172a').fontSize(12).font('Helvetica');
+    doc.text(formatInr(statement.openingBalance), 40, boxY + 34, { width: colW, align: 'center' });
+    doc.text(formatInr(statement.income), 40 + colW, boxY + 34, { width: colW, align: 'center' });
+    doc.text(formatInr(statement.expenses), 40 + colW * 2, boxY + 34, { width: colW, align: 'center' });
+    doc.text(formatInr(statement.net), 40 + colW * 3, boxY + 34, { width: colW, align: 'center' });
+    doc.text(formatInr(statement.closingBalance), 40 + colW * 4, boxY + 34, { width: colW, align: 'center' });
 
-    doc.fontSize(9).fillColor('#1e293b');
+    let y = 255;
+    
+    const drawTableHeader = (startY) => {
+      doc.rect(40, startY, 515, 24).fill('#0f172a');
+      doc.fillColor('#ffffff').fontSize(10).font('Helvetica-Bold');
+      doc.text('Date', 48, startY + 7);
+      doc.text('Details', 113, startY + 7);
+      doc.text('Type', 338, startY + 7);
+      doc.text('Amount (INR)', 390, startY + 7, { width: 80, align: 'right' });
+      doc.text('Running', 470, startY + 7, { width: 77, align: 'right' });
+      doc.font('Helvetica');
+      return startY + 32;
+    };
+
+    y = drawTableHeader(y);
+
+    doc.fontSize(9).fillColor('#334155');
     if (!statement.rows.length) {
-      doc.text('No transactions in this month.', 40, y + 6);
+      doc.text('No transactions in this month.', 48, y);
     } else {
+      let isAlt = false;
       for (const row of statement.rows) {
         if (y > 760) {
           doc.addPage();
           y = 42;
+          y = drawTableHeader(y);
         }
-        doc.text(row.date, 40, y);
-        doc.text(String(row.details || '').slice(0, 42), 105, y, { width: 210 });
-        doc.text(row.type, 330, y, { width: 60 });
-        doc.text(formatInr(row.amount), 400, y, { width: 70, align: 'right' });
-        doc.text(formatInr(row.runningBalance), 480, y, { width: 70, align: 'right' });
-        y += 15;
+        
+        if (isAlt) {
+          doc.rect(40, y - 6, 515, 22).fill('#f8fafc');
+        }
+        doc.fillColor('#334155');
+        
+        doc.text(row.date, 48, y);
+        doc.text(String(row.details || '').slice(0, 42), 113, y, { width: 210 });
+        doc.text(row.type, 338, y, { width: 60 });
+        
+        let amtColor = '#334155';
+        let amtPrefix = '';
+        if (row.type === 'income') {
+          amtColor = '#10b981';
+          amtPrefix = '+ ';
+        } else if (row.type === 'expense') {
+          amtColor = '#ef4444';
+          amtPrefix = '- ';
+        } else if (row.type === 'balance_update') {
+          amtColor = row.amount >= 0 ? '#10b981' : '#ef4444';
+          amtPrefix = row.amount >= 0 ? '+ ' : '- ';
+        }
+        
+        doc.fillColor(amtColor);
+        doc.text(amtPrefix + formatInr(Math.abs(row.amount)), 390, y, { width: 80, align: 'right' });
+        
+        doc.fillColor('#334155');
+        doc.text(formatInr(row.runningBalance), 470, y, { width: 77, align: 'right' });
+        y += 22;
+        isAlt = !isAlt;
       }
+      doc.moveTo(40, y - 6).lineTo(555, y - 6).strokeColor('#e2e8f0').stroke();
     }
 
     const totalPages = doc.bufferedPageRange().count;

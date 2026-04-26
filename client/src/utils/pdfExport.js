@@ -24,11 +24,11 @@ function txTitle(tx) {
 function amountCell(tx) {
   const t = tx.type;
   const raw = Number(tx.amount);
-  if (t === 'expense') return `− ${formatInrPlain(Math.abs(raw))}`;
+  if (t === 'expense') return `- ${formatInrPlain(Math.abs(raw))}`;
   if (t === 'income') return `+ ${formatInrPlain(Math.abs(raw))}`;
   if (t === 'balance_update') {
     const d = Number(tx.amount);
-    const sign = d >= 0 ? '+' : '−';
+    const sign = d >= 0 ? '+' : '-';
     return `${sign} ${formatInrPlain(Math.abs(d))}`;
   }
   if (t === 'transfer') return formatInrPlain(Math.abs(raw));
@@ -67,20 +67,20 @@ export function buildMonthStatementPdf(opts) {
 
   const period = formatMonthLong(new Date(`${month}-01T12:00:00`));
 
-  doc.setFillColor(16, 185, 129);
-  doc.rect(0, 0, pageW, 32, 'F');
+  doc.setFillColor(15, 23, 42);
+  doc.rect(0, 0, pageW, 36, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(20);
-  doc.text('Spendly', 14, 14);
+  doc.setFontSize(22);
+  doc.text('Spendly', 14, 16);
   doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.text('Monthly Statement', 14, 25);
   doc.setFontSize(10);
-  doc.text('Monthly statement', 14, 22);
-  doc.setFontSize(9);
-  doc.text(period, pageW - 14, 14, { align: 'right' });
+  doc.text(period, pageW - 14, 16, { align: 'right' });
 
   doc.setTextColor(15, 23, 42);
-  let y = 40;
+  let y = 46;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.text('Prepared for', 14, y);
@@ -102,17 +102,31 @@ export function buildMonthStatementPdf(opts) {
   const opening = Number(bundle.openingBalance) || 0;
   const closing = txs.length ? Number(txs[txs.length - 1].runningBalance) : opening;
 
-  doc.setFillColor(241, 245, 249);
-  doc.roundedRect(14, y, pageW - 28, 26, 2, 2, 'F');
-  doc.setFontSize(8.5);
-  doc.setTextColor(51, 65, 85);
-  const boxY = y + 5;
-  doc.text(`Opening balance: ${formatInrPlain(opening)}`, 18, boxY);
-  doc.text(`Total income: ${formatInrPlain(income)}`, 18, boxY + 5);
-  doc.text(`Total expenses: ${formatInrPlain(expense)}`, 18, boxY + 10);
-  doc.text(`Net (month): ${formatInrPlain(income - expense)}`, 18, boxY + 15);
-  doc.text(`Closing (end of list): ${formatInrPlain(closing)}`, 18, boxY + 20);
-  y += 32;
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(226, 232, 240);
+  doc.roundedRect(14, y, pageW - 28, 28, 3, 3, 'FD');
+  
+  const boxY = y + 8;
+  const colW = (pageW - 28) / 5;
+  
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(100, 116, 139);
+  doc.text('OPENING', 14 + colW*0.5, boxY, { align: 'center' });
+  doc.text('INCOME', 14 + colW*1.5, boxY, { align: 'center' });
+  doc.text('EXPENSES', 14 + colW*2.5, boxY, { align: 'center' });
+  doc.text('NET', 14 + colW*3.5, boxY, { align: 'center' });
+  doc.text('CLOSING', 14 + colW*4.5, boxY, { align: 'center' });
+  
+  doc.setFontSize(10);
+  doc.setTextColor(15, 23, 42);
+  doc.text(formatInrPlain(opening), 14 + colW*0.5, boxY + 7, { align: 'center' });
+  doc.text(formatInrPlain(income), 14 + colW*1.5, boxY + 7, { align: 'center' });
+  doc.text(formatInrPlain(expense), 14 + colW*2.5, boxY + 7, { align: 'center' });
+  doc.text(formatInrPlain(income - expense), 14 + colW*3.5, boxY + 7, { align: 'center' });
+  doc.text(formatInrPlain(closing), 14 + colW*4.5, boxY + 7, { align: 'center' });
+  
+  y += 36;
 
   const body = txs.map((tx) => [
     formatShortDate(tx.date),
@@ -133,14 +147,24 @@ export function buildMonthStatementPdf(opts) {
       startY: y,
       head: [['Date', 'Details', 'Type', 'Amount (INR)', 'Running']],
       body,
-      styles: { fontSize: 7.5, cellPadding: 1.8, textColor: [15, 23, 42] },
+      styles: { fontSize: 8, cellPadding: 2, textColor: [51, 65, 85] },
       headStyles: {
         fillColor: [15, 23, 42],
         textColor: [255, 255, 255],
         fontStyle: 'bold',
-        fontSize: 8,
+        fontSize: 8.5,
       },
       alternateRowStyles: { fillColor: [248, 250, 252] },
+      didParseCell: (data) => {
+        if (data.section === 'body' && data.column.index === 3) {
+          const text = data.cell.text[0] || '';
+          if (text.startsWith('+')) {
+            data.cell.styles.textColor = [16, 185, 129]; // emerald-500
+          } else if (text.startsWith('-')) {
+            data.cell.styles.textColor = [239, 68, 68]; // red-500
+          }
+        }
+      },
       columnStyles: {
         0: { cellWidth: 26 },
         1: { cellWidth: 58 },
