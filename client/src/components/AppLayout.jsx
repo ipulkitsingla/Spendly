@@ -63,6 +63,9 @@ export default function AppLayout() {
           <NavLink to="/accounts" className={({ isActive }) => (isActive ? 'active' : '')}>
             <span>💳</span> Accounts
           </NavLink>
+          <NavLink to="/search" className={({ isActive }) => (isActive ? 'active' : '')}>
+            <span>🔍</span> Search
+          </NavLink>
           <NavLink to="/pending" className={({ isActive }) => (isActive ? 'active' : '')}>
             <span>🧾</span> Pending
           </NavLink>
@@ -92,6 +95,10 @@ export default function AppLayout() {
         <NavLink to="/accounts" className={({ isActive }) => (isActive ? 'active' : '')}>
           <span className="nav-icon">💳</span>
           Accounts
+        </NavLink>
+        <NavLink to="/search" className={({ isActive }) => (isActive ? 'active' : '')}>
+          <span className="nav-icon">🔍</span>
+          Search
         </NavLink>
         <NavLink to="/pending" className={({ isActive }) => (isActive ? 'active' : '')}>
           <span className="nav-icon">🧾</span>

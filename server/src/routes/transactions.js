@@ -149,6 +149,56 @@ router.get('/notes', async (req, res) => {
   }
 });
 
+router.get('/search', async (req, res) => {
+  try {
+    const { q, start, end, min, max, accountId } = req.query;
+    const filter = { userId: req.userId };
+
+    if (q) {
+      const regex = new RegExp(q, 'i');
+      filter.$or = [
+        { note: regex },
+        { category: regex }
+      ];
+    }
+
+    if (start || end) {
+      filter.date = {};
+      if (start) filter.date.$gte = new Date(start);
+      if (end) filter.date.$lte = new Date(end);
+    }
+
+    if (min !== undefined && min !== '') {
+      filter.amount = filter.amount || {};
+      filter.amount.$gte = Number(min);
+    }
+    if (max !== undefined && max !== '') {
+      filter.amount = filter.amount || {};
+      filter.amount.$lte = Number(max);
+    }
+
+    if (accountId) {
+      const idFilter = [
+        { accountId },
+        { fromAccountId: accountId },
+        { toAccountId: accountId }
+      ];
+      if (filter.$or) {
+        filter.$and = [{ $or: filter.$or }, { $or: idFilter }];
+        delete filter.$or;
+      } else {
+        filter.$or = idFilter;
+      }
+    }
+
+    const txs = await Transaction.find(filter).sort({ date: -1, _id: -1 }).limit(100).lean();
+    res.json(txs);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to search transactions' });
+  }
+});
+
 router.post('/', async (req, res) => {
   try {
     const { type } = req.body;

@@ -170,6 +170,14 @@ export const api = {
     if (!browserOnline()) return Promise.resolve([]);
     return rawRequest('/api/transactions/notes');
   },
+  searchTransactions: (params) => {
+    if (!browserOnline()) throw new Error('Connect to the internet to search your full history.');
+    const q = new URLSearchParams();
+    for (const [k, v] of Object.entries(params)) {
+      if (v) q.set(k, v);
+    }
+    return request(`/api/transactions/search?${q}`);
+  },
   transactions: (month, accountId) => {
     const q = new URLSearchParams({ month });
     if (accountId) q.set('accountId', accountId);

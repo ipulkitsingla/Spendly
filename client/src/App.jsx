@@ -13,6 +13,7 @@ const StatsPage = lazy(() => import('./pages/StatsPage.jsx'));
 const AccountsPage = lazy(() => import('./pages/AccountsPage.jsx'));
 const PendingPage = lazy(() => import('./pages/PendingPage.jsx'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage.jsx'));
+const SearchPage = lazy(() => import('./pages/SearchPage.jsx'));
 
 function Loading() {
   return (
@@ -62,6 +63,7 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="stats" element={<StatsPage />} />
             <Route path="accounts" element={<AccountsPage />} />
+            <Route path="search" element={<SearchPage />} />
             <Route path="pending" element={<PendingPage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
