@@ -13,7 +13,7 @@ function cronAuthorized(req) {
 
 function ensureCronAuth(req, res, next) {
   if (!cronAuthorized(req)) {
-    return res.status(401).json({ message: 'Unauthorized cron trigger' });
+    return res.status(401).end();
   }
   next();
 }
@@ -24,32 +24,32 @@ router.get('/health', (_, res) => {
 
 router.all('/expense-reminder', ensureCronAuth, async (req, res) => {
   try {
-    res.setHeader('x-no-compression', 'true');
     await runExpenseReminder();
-    res.json({ ok: true });
+    res.status(200).end();
   } catch (e) {
-    res.status(500).json({ message: e?.message || 'expense reminder failed' });
+    console.error('Expense reminder failed:', e);
+    res.status(500).end();
   }
 });
 
 router.all('/pending-reminder', ensureCronAuth, async (req, res) => {
   try {
-    res.setHeader('x-no-compression', 'true');
     await runPendingDebtReminder();
-    res.json({ ok: true });
+    res.status(200).end();
   } catch (e) {
-    res.status(500).json({ message: e?.message || 'pending reminder failed' });
+    console.error('Pending reminder failed:', e);
+    res.status(500).end();
   }
 });
 
 router.all('/monthly-statement', ensureCronAuth, async (req, res) => {
   try {
-    res.setHeader('x-no-compression', 'true');
     const month = req.query.month; // e.g. 2026-04
     await runMonthlyStatementEmail(month);
-    res.json({ ok: true });
+    res.status(200).end();
   } catch (e) {
-    res.status(500).json({ message: e?.message || 'monthly statement failed' });
+    console.error('Monthly statement failed:', e);
+    res.status(500).end();
   }
 });
 
