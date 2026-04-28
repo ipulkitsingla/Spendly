@@ -224,6 +224,8 @@ router.post('/', async (req, res) => {
         amount: 0,
         category: 'Balance update',
         accountId: account._id,
+        accountName: account.name,
+        accountType: account.type,
         date: d,
         note: note.trim(),
         balanceAfterTransaction: newBal,
@@ -257,6 +259,8 @@ router.post('/', async (req, res) => {
         amount: numAmount,
         category,
         accountId: account._id,
+        accountName: account.name,
+        accountType: account.type,
         date: d,
         note,
         balanceAfterTransaction: 0,
@@ -280,7 +284,11 @@ router.post('/', async (req, res) => {
         amount: numAmount,
         category: category || 'Transfer',
         fromAccountId: from._id,
+        fromAccountName: from.name,
+        fromAccountType: from.type,
         toAccountId: to._id,
+        toAccountName: to.name,
+        toAccountType: to.type,
         date: d,
         note,
         balanceAfterTransaction: 0,
@@ -314,23 +322,49 @@ router.patch('/:id', async (req, res) => {
       if (req.body.category != null) tx.category = String(req.body.category).trim();
       if (req.body.note != null) tx.note = String(req.body.note);
       if (req.body.date != null) tx.date = new Date(req.body.date);
-      if (req.body.accountId != null) tx.accountId = req.body.accountId;
-      if (req.body.accountId != null) tx.balanceAccountId = req.body.accountId;
+      if (req.body.accountId != null) {
+        const acc = await Account.findOne({ _id: req.body.accountId, userId: req.userId });
+        if (acc) {
+          tx.accountId = acc._id;
+          tx.accountName = acc.name;
+          tx.accountType = acc.type;
+          tx.balanceAccountId = acc._id;
+        }
+      }
     } else if (tx.type === 'transfer') {
       if (req.body.amount != null) tx.amount = Number(req.body.amount);
       if (req.body.category != null) tx.category = String(req.body.category).trim();
       if (req.body.note != null) tx.note = String(req.body.note);
       if (req.body.date != null) tx.date = new Date(req.body.date);
-      if (req.body.fromAccountId != null) tx.fromAccountId = req.body.fromAccountId;
-      if (req.body.toAccountId != null) tx.toAccountId = req.body.toAccountId;
-      if (req.body.fromAccountId != null) tx.balanceAccountId = req.body.fromAccountId;
+      if (req.body.fromAccountId != null) {
+        const acc = await Account.findOne({ _id: req.body.fromAccountId, userId: req.userId });
+        if (acc) {
+          tx.fromAccountId = acc._id;
+          tx.fromAccountName = acc.name;
+          tx.fromAccountType = acc.type;
+          tx.balanceAccountId = acc._id;
+        }
+      }
+      if (req.body.toAccountId != null) {
+        const acc = await Account.findOne({ _id: req.body.toAccountId, userId: req.userId });
+        if (acc) {
+          tx.toAccountId = acc._id;
+          tx.toAccountName = acc.name;
+          tx.toAccountType = acc.type;
+        }
+      }
     } else if (tx.type === 'balance_update') {
       if (req.body.newBalance != null) tx.balanceAfterTransaction = Number(req.body.newBalance);
       if (req.body.note != null) tx.note = String(req.body.note);
       if (req.body.date != null) tx.date = new Date(req.body.date);
       if (req.body.accountId != null) {
-        tx.accountId = req.body.accountId;
-        tx.balanceAccountId = req.body.accountId;
+        const acc = await Account.findOne({ _id: req.body.accountId, userId: req.userId });
+        if (acc) {
+          tx.accountId = acc._id;
+          tx.accountName = acc.name;
+          tx.accountType = acc.type;
+          tx.balanceAccountId = acc._id;
+        }
       }
     }
 
