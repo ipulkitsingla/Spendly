@@ -10,10 +10,10 @@ function Field({ label, children }) {
   );
 }
 
-export default function TxModals({ mode, onClose, accounts, categories = [], onSaved, defaultCategory }) {
+export default function TxModals({ mode, onClose, accounts, categories = [], onSaved }) {
   const catList = categories.length ? categories : [{ name: 'Other', isCustom: true }];
   const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState(defaultCategory || catList[0]?.name || 'Other');
+  const [category, setCategory] = useState(catList[0]?.name || 'Other');
   const [note, setNote] = useState('');
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [accountId, setAccountId] = useState(accounts[0]?._id || '');
@@ -36,7 +36,7 @@ export default function TxModals({ mode, onClose, accounts, categories = [], onS
     setErr('');
     setPersonName('');
     setDate(new Date().toISOString().slice(0, 10));
-    setCategory(defaultCategory || catList[0]?.name || 'Other');
+    setCategory(catList[0]?.name || 'Other');
     setAccountId(accounts[0]?._id || '');
     setFromId(accounts[0]?._id || '');
     setToId(accounts[1]?._id || accounts[0]?._id || '');
@@ -53,10 +53,10 @@ export default function TxModals({ mode, onClose, accounts, categories = [], onS
     mode === 'income'
       ? 'Add income'
       : mode === 'expense'
-          ? 'Add expense'
-          : mode === 'transfer'
-            ? 'Transfer'
-            : 'Pending debt (lent)';
+        ? 'Add expense'
+        : mode === 'transfer'
+          ? 'Transfer'
+          : 'Pending debt (lent)';
 
   const submit = async (e) => {
     e.preventDefault();

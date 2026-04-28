@@ -25,25 +25,17 @@ function txTitle(tx) {
 
 function txSubtitle(tx, accountsById) {
   const day = formatDay(tx.date);
-  const note = tx.note || tx.category;
-  
   if (tx.type === 'transfer') {
-    const fromName = tx.fromAccountName || accountsById[String(tx.fromAccountId)]?.name || 'Account';
-    const fromType = tx.fromAccountType || accountsById[String(tx.fromAccountId)]?.type || '';
-    const toName = tx.toAccountName || accountsById[String(tx.toAccountId)]?.name || 'Account';
-    const toType = tx.toAccountType || accountsById[String(tx.toAccountId)]?.type || '';
-    
-    const from = fromType ? `${fromName} (${fromType})` : fromName;
-    const to = toType ? `${toName} (${toType})` : toName;
-    
-    return `${from} → ${to} · ${note} · ${day}`;
+    const from = accountsById[String(tx.fromAccountId)]?.name || 'Account';
+    const to = accountsById[String(tx.toAccountId)]?.name || 'Account';
+    return `${day} · ${from} → ${to}`;
   }
-  
-  const accName = tx.accountName || accountsById[String(tx.accountId)]?.name || 'Account';
-  const accType = tx.accountType || accountsById[String(tx.accountId)]?.type || '';
-  const accLabel = accType ? `${accName} (${accType})` : accName;
-  
-  return `${accLabel} · ${note} · ${day}`;
+  if (tx.type === 'balance_update') {
+    const acc = accountsById[String(tx.accountId)]?.name || 'Account';
+    return `${day} · ${acc}`;
+  }
+  const acc = accountsById[String(tx.accountId)]?.name || 'Account';
+  return `${day} · ${acc}`;
 }
 
 function groupTxsByDate(txs) {
@@ -89,8 +81,7 @@ export default function Dashboard() {
   const [accounts, setAccounts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [bundle, setBundle] = useState(null);
-  const [modal, setModal] = useState(null); // { mode, category } or mode string
-  const [modalData, setModalData] = useState(null);
+  const [modal, setModal] = useState(null);
   const [editTx, setEditTx] = useState(null);
   const [err, setErr] = useState('');
   const [incomeHidden, setIncomeHidden] = useState(true);
@@ -160,7 +151,6 @@ export default function Dashboard() {
   const opening = bundle?.openingBalance ?? 0;
 
   const monthIncome = txs.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const budgetOffsetIncome = txs.filter((t) => t.type === 'income' && t.category !== 'Salary').reduce((s, t) => s + t.amount, 0);
   const monthExpense = txs.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   const endRunning = txs.length ? txs[0].runningBalance : opening;
 
@@ -290,10 +280,7 @@ export default function Dashboard() {
             key={cat} 
             type="button" 
             className="quick-cat-btn"
-            onClick={() => {
-              setModal('expense');
-              setModalData({ category: cat });
-            }}
+            onClick={() => setModal('expense')}
           >
             <span className="icon">{categoryIcon(cat)}</span>
             <span>{cat}</span>
@@ -402,26 +389,26 @@ export default function Dashboard() {
           <div className="budget-info">
             <div className="budget-label">
               <span>Monthly Budget</span>
-              <strong className={monthExpense - budgetOffsetIncome > user.monthlyBudget ? 'type-expense' : 'type-income'}>
-                {Math.round((Math.max(0, monthExpense - budgetOffsetIncome) / user.monthlyBudget) * 100)}% spent
+              <strong className={monthExpense > user.monthlyBudget ? 'type-expense' : 'type-income'}>
+                {Math.round((monthExpense / user.monthlyBudget) * 100)}% spent
               </strong>
             </div>
             <div className="budget-progress-track">
               <div 
-                className={`budget-progress-fill ${monthExpense - budgetOffsetIncome > user.monthlyBudget ? 'over' : ''}`}
-                style={{ width: `${Math.min(100, (Math.max(0, monthExpense - budgetOffsetIncome) / user.monthlyBudget) * 100)}%` }}
+                className={`budget-progress-fill ${monthExpense > user.monthlyBudget ? 'over' : ''}`}
+                style={{ width: `${Math.min(100, (monthExpense / user.monthlyBudget) * 100)}%` }}
               />
             </div>
             <div className="budget-footer">
               <div className="budget-spent-summary">
-                <span className="budget-spent-amt">{formatMoney(Math.max(0, monthExpense - budgetOffsetIncome))}</span>
+                <span className="budget-spent-amt">{formatMoney(monthExpense)}</span>
                 <span className="budget-sep">of</span>
                 <span className="budget-total-amt">{formatMoney(user.monthlyBudget)}</span>
               </div>
-              <span className={`budget-remaining ${monthExpense - budgetOffsetIncome > user.monthlyBudget ? 'type-expense' : 'type-income'}`}>
-                {user.monthlyBudget - (monthExpense - budgetOffsetIncome) > 0 
-                  ? `${formatMoney(user.monthlyBudget - (monthExpense - budgetOffsetIncome))} left`
-                  : `${formatMoney((monthExpense - budgetOffsetIncome) - user.monthlyBudget)} over`}
+              <span className={`budget-remaining ${monthExpense > user.monthlyBudget ? 'type-expense' : 'type-income'}`}>
+                {user.monthlyBudget - monthExpense > 0 
+                  ? `${formatMoney(user.monthlyBudget - monthExpense)} left`
+                  : `${formatMoney(monthExpense - user.monthlyBudget)} over`}
               </span>
             </div>
           </div>
@@ -479,7 +466,7 @@ export default function Dashboard() {
                     iconCls = 'transfer';
                   }
 
-                  const subtitle = txSubtitle(tx, accountsById);
+                  const subtitle = `${tx.note || tx.category} · ${formatDay(tx.date)}`;
 
                   return (
                     <li key={tx._id}>
@@ -533,13 +520,9 @@ export default function Dashboard() {
 
       <QuickAddFab onPick={setModal} />
       <TxModals
-        key={modal ? `${modal}-${modalData?.category || ''}` : 'closed'}
+        key={modal || 'closed'}
         mode={modal}
-        defaultCategory={modalData?.category}
-        onClose={() => {
-          setModal(null);
-          setModalData(null);
-        }}
+        onClose={() => setModal(null)}
         accounts={accounts}
         categories={categories}
         onSaved={refresh}
