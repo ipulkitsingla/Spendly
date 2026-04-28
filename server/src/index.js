@@ -38,10 +38,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/cron', cronRoutes);
 
-app.get('/api/health', (req, res) => {
-  console.log("Health check hit at", new Date().toISOString());
-  res.status(200).json({ ok: true });
-});
+app.get('/api/health', (_, res) => res.json({ ok: true }));
 
 mongoose
   .connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/spendly')
