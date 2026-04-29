@@ -97,6 +97,11 @@ export default function TxModals({ mode, onClose, accounts, categories = [], onS
           note,
         });
       } else {
+        if (mode === 'expense' && category === 'Debt' && !personName.trim()) {
+          setErr('Person name is required for Debt expenses');
+          setBusy(false);
+          return;
+        }
         await api.createTransaction({
           type: mode,
           amount: num,
@@ -105,6 +110,16 @@ export default function TxModals({ mode, onClose, accounts, categories = [], onS
           date: new Date(date).toISOString(),
           note,
         });
+
+        if (mode === 'expense' && category === 'Debt') {
+          await api.createPending({
+            personName: personName.trim(),
+            amount: num,
+            category: 'Debt',
+            date: new Date(date).toISOString(),
+            note,
+          });
+        }
       }
       onSaved();
       close();
@@ -121,7 +136,7 @@ export default function TxModals({ mode, onClose, accounts, categories = [], onS
         <h2>{title}</h2>
         {err && <p style={{ color: 'var(--expense)', fontSize: '0.9rem' }}>{err}</p>}
         <form onSubmit={submit}>
-          {mode === 'pending' && (
+          {(mode === 'pending' || (mode === 'expense' && category === 'Debt')) && (
             <Field label="Person">
               <input
                 className="input"
