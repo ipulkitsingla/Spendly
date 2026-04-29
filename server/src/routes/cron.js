@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { runExpenseReminder, runMonthlyStatementEmail, runPendingDebtReminder } from '../services/reminderScheduler.js';
+import { runExpenseReminder, runMonthlyStatementEmail, runPendingDebtReminder, resetEmailLogs } from '../services/reminderScheduler.js';
 
 const router = Router();
 
@@ -49,6 +49,20 @@ router.all('/monthly-statement', ensureCronAuth, async (req, res) => {
     res.status(200).end();
   } catch (e) {
     console.error('Monthly statement failed:', e);
+    res.status(500).end();
+  }
+});
+
+router.all('/reset-logs', ensureCronAuth, async (req, res) => {
+  try {
+    const { kind, periodKey } = req.query;
+    const filter = {};
+    if (kind) filter.kind = kind;
+    if (periodKey) filter.periodKey = periodKey;
+    const count = await resetEmailLogs(filter);
+    res.json({ ok: true, resetCount: count });
+  } catch (e) {
+    console.error('Reset logs failed:', e);
     res.status(500).end();
   }
 });

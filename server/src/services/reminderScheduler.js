@@ -407,3 +407,8 @@ export function startReminderScheduler() {
 
   console.log(`Email reminder scheduler started in timezone ${REMINDER_TIMEZONE}`);
 }
+
+export async function resetEmailLogs(filter = {}) {
+  const result = await EmailDispatchLog.deleteMany(filter);
+  return result.deletedCount;
+}
