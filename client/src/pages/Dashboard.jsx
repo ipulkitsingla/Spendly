@@ -162,6 +162,7 @@ export default function Dashboard() {
   const monthIncome = txs.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const budgetOffsetIncome = txs.filter((t) => t.type === 'income' && t.category !== 'Salary').reduce((s, t) => s + t.amount, 0);
   const monthExpense = txs.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const budgetExpense = txs.filter((t) => t.type === 'expense' && t.category !== 'Debt').reduce((s, t) => s + t.amount, 0);
   const endRunning = txs.length ? txs[0].runningBalance : opening;
 
   const monthTitle = formatMonthLong(new Date(month + '-01T12:00:00'));
@@ -402,26 +403,26 @@ export default function Dashboard() {
           <div className="budget-info">
             <div className="budget-label">
               <span>Monthly Budget</span>
-              <strong className={monthExpense - budgetOffsetIncome > user.monthlyBudget ? 'type-expense' : 'type-income'}>
-                {Math.round((Math.max(0, monthExpense - budgetOffsetIncome) / user.monthlyBudget) * 100)}% spent
+              <strong className={budgetExpense - budgetOffsetIncome > user.monthlyBudget ? 'type-expense' : 'type-income'}>
+                {Math.round((Math.max(0, budgetExpense - budgetOffsetIncome) / user.monthlyBudget) * 100)}% spent
               </strong>
             </div>
             <div className="budget-progress-track">
               <div 
-                className={`budget-progress-fill ${monthExpense - budgetOffsetIncome > user.monthlyBudget ? 'over' : ''}`}
-                style={{ width: `${Math.min(100, (Math.max(0, monthExpense - budgetOffsetIncome) / user.monthlyBudget) * 100)}%` }}
+                className={`budget-progress-fill ${budgetExpense - budgetOffsetIncome > user.monthlyBudget ? 'over' : ''}`}
+                style={{ width: `${Math.min(100, (Math.max(0, budgetExpense - budgetOffsetIncome) / user.monthlyBudget) * 100)}%` }}
               />
             </div>
             <div className="budget-footer">
               <div className="budget-spent-summary">
-                <span className="budget-spent-amt">{formatMoney(Math.max(0, monthExpense - budgetOffsetIncome))}</span>
+                <span className="budget-spent-amt">{formatMoney(Math.max(0, budgetExpense - budgetOffsetIncome))}</span>
                 <span className="budget-sep">of</span>
                 <span className="budget-total-amt">{formatMoney(user.monthlyBudget)}</span>
               </div>
-              <span className={`budget-remaining ${monthExpense - budgetOffsetIncome > user.monthlyBudget ? 'type-expense' : 'type-income'}`}>
-                {user.monthlyBudget - (monthExpense - budgetOffsetIncome) > 0 
-                  ? `${formatMoney(user.monthlyBudget - (monthExpense - budgetOffsetIncome))} left`
-                  : `${formatMoney((monthExpense - budgetOffsetIncome) - user.monthlyBudget)} over`}
+              <span className={`budget-remaining ${budgetExpense - budgetOffsetIncome > user.monthlyBudget ? 'type-expense' : 'type-income'}`}>
+                {user.monthlyBudget - (budgetExpense - budgetOffsetIncome) > 0 
+                  ? `${formatMoney(user.monthlyBudget - (budgetExpense - budgetOffsetIncome))} left`
+                  : `${formatMoney((budgetExpense - budgetOffsetIncome) - user.monthlyBudget)} over`}
               </span>
             </div>
           </div>
