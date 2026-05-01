@@ -2,11 +2,15 @@
     "crons": [
       {
         "path": "/api/cron/expense-reminder",
-        "schedule": "0 21 * * *"
+        "schedule": "30 15 * * *"
       },
       {
-        "path": "/api/cron/debt-reminder",
-        "schedule": "0 22 * * *"
+        "path": "/api/cron/pending-reminder",
+        "schedule": "30 16 * * *"
+      },
+      {
+        "path": "/api/cron/monthly-statement",
+        "schedule": "30 3 1 * *"
       }
     ]
 }
