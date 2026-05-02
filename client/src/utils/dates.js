@@ -30,10 +30,10 @@ export function subMonths(d, n) {
 
 /** e.g. "April 2026" */
 export function formatMonthLong(d) {
-  return new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' }).format(d);
+  return new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' }).format(d);
 }
 
-/** e.g. "Apr 19, 2026" */
+/** e.g. "19 Apr 2026" */
 export function formatMediumDate(d) {
-  return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(d);
+  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(d);
 }

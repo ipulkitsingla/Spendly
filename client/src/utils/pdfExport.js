@@ -44,7 +44,7 @@ function typeLabel(tx) {
 
 function formatShortDate(iso) {
   try {
-    return new Intl.DateTimeFormat('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }).format(
+    return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(
       new Date(iso)
     );
   } catch {

@@ -6,7 +6,7 @@ import { parseMonth } from '../utils/monthRange.js';
 
 function monthLong(monthKey) {
   const [y, m] = monthKey.split('-').map(Number);
-  return new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric' }).format(
+  return new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' }).format(
     new Date(Date.UTC(y, m - 1, 1))
   );
 }
@@ -23,7 +23,7 @@ function typeLabel(type) {
 }
 
 function shortDate(d) {
-  return new Intl.DateTimeFormat('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }).format(
+  return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(
     new Date(d)
   );
 }
