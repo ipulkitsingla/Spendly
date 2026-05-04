@@ -5,7 +5,7 @@ const transactionSchema = new mongoose.Schema(
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     type: {
       type: String,
-      enum: ['income', 'expense', 'transfer', 'balance_update'],
+      enum: ['income', 'expense', 'transfer', 'balance_update', 'credit_expense', 'credit_payment'],
       required: true,
     },
     /** For income/expense/transfer: non-negative. For balance_update: signed delta applied to the account. */

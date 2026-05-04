@@ -38,4 +38,25 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.delete('/:name', async (req, res) => {
+  try {
+    const { name } = req.params;
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    const idx = user.categories.findIndex((c) => c.name.toLowerCase() === name.toLowerCase());
+    if (idx === -1) {
+      return res.status(404).json({ message: 'Category not found' });
+    }
+    if (!user.categories[idx].isCustom) {
+      return res.status(400).json({ message: 'Cannot delete built-in categories' });
+    }
+    user.categories.splice(idx, 1);
+    await user.save();
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to delete category' });
+  }
+});
+
 export default router;

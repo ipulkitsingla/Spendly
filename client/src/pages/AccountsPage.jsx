@@ -9,6 +9,10 @@ export default function AccountsPage() {
   const [categories, setCategories] = useState([]);
   const [newName, setNewName] = useState('');
   const [newCat, setNewCat] = useState('');
+  const [newAccType, setNewAccType] = useState('custom');
+  const [newCreditLimit, setNewCreditLimit] = useState('');
+  const [newBillingDate, setNewBillingDate] = useState('1');
+  const [newDueDate, setNewDueDate] = useState('15');
   const [editing, setEditing] = useState(null);
   const [editName, setEditName] = useState('');
   const [adjusting, setAdjusting] = useState(null);
@@ -34,15 +38,25 @@ export default function AccountsPage() {
     return () => window.removeEventListener('spendly-sync-done', h);
   }, [load]);
 
-  const totalAssets = useMemo(() => accounts.reduce((sum, a) => sum + (Number(a.balance) || 0), 0), [accounts]);
+  const totalAssets = useMemo(() => accounts.filter(a => a.type !== 'credit').reduce((sum, a) => sum + (Number(a.balance) || 0), 0), [accounts]);
+  const totalLiabilities = useMemo(() => accounts.filter(a => a.type === 'credit').reduce((sum, a) => sum + (Number(a.billedAmount) || 0) + (Number(a.unbilledAmount) || 0), 0), [accounts]);
+  const netWorth = totalAssets - totalLiabilities;
 
   const addAccount = async (e) => {
     e.preventDefault();
     if (!newName.trim()) return;
     setErr('');
     try {
-      await api.createAccount({ name: newName.trim() });
+      await api.createAccount({ 
+        name: newName.trim(),
+        type: newAccType,
+        creditLimit: newAccType === 'credit' ? Number(newCreditLimit) : undefined,
+        billingDate: newAccType === 'credit' ? Number(newBillingDate) : undefined,
+        dueDate: newAccType === 'credit' ? Number(newDueDate) : undefined,
+      });
       setNewName('');
+      setNewAccType('custom');
+      setNewCreditLimit('');
       await load();
     } catch (ex) {
       setErr(ex.message);
@@ -117,6 +131,17 @@ export default function AccountsPage() {
     }
   };
 
+  const removeCategory = async (name) => {
+    if (!window.confirm(`Delete category "${name}"?`)) return;
+    setErr('');
+    try {
+      await api.deleteCategory(name);
+      await load();
+    } catch (ex) {
+      setErr(ex.message);
+    }
+  };
+
   return (
     <div className="accounts-container animate-fade-in">
       <header className="page-header">
@@ -126,8 +151,17 @@ export default function AccountsPage() {
       <section className="accounts-hero card animate-fade-up">
         <div className="accounts-hero-glow" />
         <p className="accounts-hero-label">Net Worth</p>
-        <h2 className="accounts-hero-amount">{formatMoney(totalAssets)}</h2>
-        <p className="accounts-hero-sub">Combined balance across {accounts.length} accounts</p>
+        <h2 className="accounts-hero-amount">{formatMoney(netWorth)}</h2>
+        <div className="net-worth-breakdown" style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: '8px' }}>
+          <div>
+            <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>Assets</span>
+            <div style={{ color: 'var(--income)', fontWeight: 'bold' }}>{formatMoney(totalAssets)}</div>
+          </div>
+          <div>
+            <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>Liabilities</span>
+            <div style={{ color: 'var(--expense)', fontWeight: 'bold' }}>{formatMoney(totalLiabilities)}</div>
+          </div>
+        </div>
       </section>
 
       {err && <p className="error-msg" style={{ margin: '0 16px 16px' }}>{err}</p>}
@@ -139,10 +173,17 @@ export default function AccountsPage() {
         </div>
 
         <div className="accounts-grid">
-          {accounts.map((a) => (
+          {accounts.map((a) => {
+            const isCredit = a.type === 'credit';
+            const used = (a.billedAmount || 0) + (a.unbilledAmount || 0);
+            const limit = a.creditLimit || 0;
+            const available = limit - used;
+            const progress = limit > 0 ? Math.min(100, (used / limit) * 100) : 0;
+
+            return (
             <div key={a._id} className="card account-detail-card animate-fade-up">
               <div className="acc-detail-head">
-                <div className="acc-type-icon">🏦</div>
+                <div className="acc-type-icon">{isCredit ? '💳' : '🏦'}</div>
                 <div className="acc-info-main">
                   {editing === a._id ? (
                     <input
@@ -158,19 +199,38 @@ export default function AccountsPage() {
                   )}
                   <span className="acc-type-tag">{a.type}</span>
                 </div>
-                <div className="acc-balance-val">{formatMoney(a.balance)}</div>
+                <div className="acc-balance-val" style={{ color: isCredit ? 'var(--expense)' : 'inherit' }}>
+                  {isCredit ? formatMoney(used) : formatMoney(a.balance)}
+                </div>
               </div>
               
+              {isCredit && (
+                <div style={{ marginTop: '12px', fontSize: '0.9rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ opacity: 0.8 }}>Available: <strong style={{ color: 'var(--income)' }}>{formatMoney(available)}</strong></span>
+                    <span style={{ opacity: 0.8 }}>Limit: {formatMoney(limit)}</span>
+                  </div>
+                  <div className="budget-progress-track">
+                    <div className={`budget-progress-fill ${progress > 80 ? 'over' : ''}`} style={{ width: `${progress}%` }} />
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '8px', fontSize: '0.8rem', opacity: 0.8 }}>
+                    <div>Billed: <strong style={{ color: 'var(--text)' }}>{formatMoney(a.billedAmount)}</strong></div>
+                    <div>Unbilled: <strong style={{ color: 'var(--text)' }}>{formatMoney(a.unbilledAmount)}</strong></div>
+                  </div>
+                </div>
+              )}
+
               <div className="acc-actions-row">
                 <button type="button" className="btn btn-ghost btn-xs text-primary" onClick={() => navigate(`/?accountId=${a._id}`)}>Transactions</button>
-                <button type="button" className="btn btn-ghost btn-xs" onClick={() => openAdjust(a)}>Adjust Balance</button>
+                {!isCredit && <button type="button" className="btn btn-ghost btn-xs" onClick={() => openAdjust(a)}>Adjust Balance</button>}
                 <div className="acc-more-actions">
                   <button type="button" className="btn btn-ghost btn-xs" onClick={() => { setEditing(a._id); setEditName(a.name); }}>Rename</button>
                   <button type="button" className="btn btn-ghost btn-xs text-danger" onClick={() => remove(a._id)}>Delete</button>
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="accounts-forms-row">
@@ -180,8 +240,34 @@ export default function AccountsPage() {
               <h4>New Account</h4>
             </div>
             <div className="form-group">
+              <label className="label">Account Type</label>
+              <select className="input" value={newAccType} onChange={(e) => setNewAccType(e.target.value)}>
+                <option value="custom">Standard Bank/Cash</option>
+                <option value="credit">Credit Card</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="label">Account Name</label>
               <input className="input" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. HDFC Bank" />
             </div>
+            {newAccType === 'credit' && (
+              <>
+                <div className="form-group">
+                  <label className="label">Credit Limit</label>
+                  <input className="input" type="number" value={newCreditLimit} onChange={(e) => setNewCreditLimit(e.target.value)} placeholder="e.g. 50000" required />
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label className="label">Billing Date</label>
+                    <input className="input" type="number" min="1" max="31" value={newBillingDate} onChange={(e) => setNewBillingDate(e.target.value)} required />
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label className="label">Due Date</label>
+                    <input className="input" type="number" min="1" max="31" value={newDueDate} onChange={(e) => setNewDueDate(e.target.value)} required />
+                  </div>
+                </div>
+              </>
+            )}
             <button type="submit" className="btn btn-primary btn-sm btn-block">Create Account</button>
           </form>
 
@@ -194,6 +280,17 @@ export default function AccountsPage() {
               <input className="input" value={newCat} onChange={(e) => setNewCat(e.target.value)} placeholder="e.g. Amazon Prime" />
             </div>
             <button type="submit" className="btn btn-primary btn-sm btn-block">Add Category</button>
+            <div style={{ marginTop: '16px' }}>
+              <label className="label">Your Custom Categories</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+                {categories.filter(c => c.isCustom).map(c => (
+                  <span key={c.name} className="acc-type-tag" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    {c.name}
+                    <button type="button" onClick={() => removeCategory(c.name)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--expense)' }}>×</button>
+                  </span>
+                ))}
+              </div>
+            </div>
           </form>
         </div>
       </div>

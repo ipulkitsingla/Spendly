@@ -55,11 +55,11 @@ router.get('/', async (req, res) => {
     if (accountId) {
       const acc = accountMap[accountId];
       if (!acc) return res.status(404).json({ message: 'Account not found' });
-      const cur = acc.balance;
+      const cur = acc.type === 'credit' ? (acc.billedAmount + acc.unbilledAmount) : acc.balance;
       const effect = futureTxs.reduce((s, tx) => s + accountDelta(tx, accountId), 0);
       opening = cur - effect;
     } else {
-      const cur = accounts.reduce((s, a) => s + a.balance, 0);
+      const cur = accounts.reduce((s, a) => s + (a.type === 'credit' ? -(a.billedAmount + a.unbilledAmount) : a.balance), 0);
       const effect = futureTxs.reduce((s, tx) => s + netWorthDelta(tx), 0);
       opening = cur - effect;
     }
@@ -100,7 +100,7 @@ router.get('/', async (req, res) => {
     const accountOpenings = {};
     for (const a of accounts) {
       const id = a._id.toString();
-      const cur = a.balance;
+      const cur = a.type === 'credit' ? (a.billedAmount + a.unbilledAmount) : a.balance;
       const effect = futureTxs.reduce((s, tx) => s + accountDelta(tx, id), 0);
       accountOpenings[id] = cur - effect;
     }
@@ -245,7 +245,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Invalid date' });
     }
 
-    if (type === 'income' || type === 'expense') {
+    if (type === 'income' || type === 'expense' || type === 'credit_expense') {
       const accountId = req.body.accountId;
       if (!accountId) {
         return res.status(400).json({ message: 'accountId is required' });
@@ -253,6 +253,9 @@ router.post('/', async (req, res) => {
       const account = await Account.findOne({ _id: accountId, userId: req.userId });
       if (!account) {
         return res.status(404).json({ message: 'Account not found' });
+      }
+      if (type === 'credit_expense' && account.type !== 'credit') {
+        return res.status(400).json({ message: 'Must select a credit account for a credit expense' });
       }
       const tx = await createWithReplay(req.userId, {
         type,
@@ -269,7 +272,7 @@ router.post('/', async (req, res) => {
       return res.status(201).json(tx);
     }
 
-    if (type === 'transfer') {
+    if (type === 'transfer' || type === 'credit_payment') {
       const { fromAccountId, toAccountId } = req.body;
       if (!fromAccountId || !toAccountId || fromAccountId === toAccountId) {
         return res.status(400).json({ message: 'Valid from and to accounts are required' });
@@ -279,10 +282,13 @@ router.post('/', async (req, res) => {
       if (!from || !to) {
         return res.status(404).json({ message: 'Account not found' });
       }
+      if (type === 'credit_payment' && to.type !== 'credit') {
+        return res.status(400).json({ message: 'Destination account must be a credit account' });
+      }
       const tx = await createWithReplay(req.userId, {
-        type: 'transfer',
+        type,
         amount: numAmount,
-        category: category || 'Transfer',
+        category: category || (type === 'transfer' ? 'Transfer' : 'Credit Payment'),
         fromAccountId: from._id,
         fromAccountName: from.name,
         fromAccountType: from.type,
@@ -317,7 +323,7 @@ router.patch('/:id', async (req, res) => {
 
     const backup = tx.toObject();
 
-    if (tx.type === 'income' || tx.type === 'expense') {
+    if (tx.type === 'income' || tx.type === 'expense' || tx.type === 'credit_expense') {
       if (req.body.amount != null) tx.amount = Number(req.body.amount);
       if (req.body.category != null) tx.category = String(req.body.category).trim();
       if (req.body.note != null) tx.note = String(req.body.note);
@@ -331,7 +337,7 @@ router.patch('/:id', async (req, res) => {
           tx.balanceAccountId = acc._id;
         }
       }
-    } else if (tx.type === 'transfer') {
+    } else if (tx.type === 'transfer' || tx.type === 'credit_payment') {
       if (req.body.amount != null) tx.amount = Number(req.body.amount);
       if (req.body.category != null) tx.category = String(req.body.category).trim();
       if (req.body.note != null) tx.note = String(req.body.note);
@@ -368,7 +374,7 @@ router.patch('/:id', async (req, res) => {
       }
     }
 
-    if (tx.type === 'transfer' && tx.fromAccountId?.toString() === tx.toAccountId?.toString()) {
+    if ((tx.type === 'transfer' || tx.type === 'credit_payment') && tx.fromAccountId?.toString() === tx.toAccountId?.toString()) {
       return res.status(400).json({ message: 'From and to accounts must differ' });
     }
 

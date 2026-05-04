@@ -368,6 +368,10 @@ export const api = {
     if (!browserOnline()) throw new Error('Add categories when you are back online.');
     return rawRequest('/api/categories', { method: 'POST', body: JSON.stringify({ name }) });
   },
+  deleteCategory: async (name) => {
+    if (!browserOnline()) throw new Error('Delete categories when you are back online.');
+    return rawRequest(`/api/categories/${encodeURIComponent(name)}`, { method: 'DELETE' });
+  },
   statsSummary: async (from, to) => {
     if (!browserOnline()) {
       throw new Error('Statistics need an internet connection.');

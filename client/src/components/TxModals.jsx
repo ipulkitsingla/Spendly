@@ -69,6 +69,9 @@ export default function TxModals({ mode, onClose, accounts, categories = [], onS
     }
     setBusy(true);
     try {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const finalDate = date === todayStr ? new Date().toISOString() : new Date(date + 'T12:00:00').toISOString();
+
       if (mode === 'pending') {
         if (!personName.trim()) {
           setErr('Person name is required');
@@ -79,7 +82,7 @@ export default function TxModals({ mode, onClose, accounts, categories = [], onS
           personName: personName.trim(),
           amount: num,
           category: category || 'Debt',
-          date: new Date(date).toISOString(),
+          date: finalDate,
           note,
         });
       } else if (mode === 'transfer') {
@@ -88,13 +91,15 @@ export default function TxModals({ mode, onClose, accounts, categories = [], onS
           setBusy(false);
           return;
         }
+        const toAcc = accounts.find(a => String(a._id) === String(toId));
+        const txType = toAcc?.type === 'credit' ? 'credit_payment' : 'transfer';
         await api.createTransaction({
-          type: 'transfer',
+          type: txType,
           amount: num,
           category: 'Transfer',
           fromAccountId: fromId,
           toAccountId: toId,
-          date: new Date(date).toISOString(),
+          date: finalDate,
           note,
         });
       } else {
@@ -103,12 +108,15 @@ export default function TxModals({ mode, onClose, accounts, categories = [], onS
           setBusy(false);
           return;
         }
+        const acc = accounts.find(a => String(a._id) === String(accountId));
+        let txType = mode;
+        if (mode === 'expense' && acc?.type === 'credit') txType = 'credit_expense';
         await api.createTransaction({
-          type: mode,
+          type: txType,
           amount: num,
           category: category || 'Other',
           accountId,
-          date: new Date(date).toISOString(),
+          date: finalDate,
           note,
         });
 
@@ -117,7 +125,7 @@ export default function TxModals({ mode, onClose, accounts, categories = [], onS
             personName: personName.trim(),
             amount: num,
             category: 'Debt',
-            date: new Date(date).toISOString(),
+            date: finalDate,
             note,
           });
         }

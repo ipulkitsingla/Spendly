@@ -27,7 +27,7 @@ function txSubtitle(tx, accountsById) {
   const day = formatDay(tx.date);
   const note = tx.note || tx.category;
   
-  if (tx.type === 'transfer') {
+  if (tx.type === 'transfer' || tx.type === 'credit_payment') {
     const fromName = tx.fromAccountName || accountsById[String(tx.fromAccountId)]?.name || 'Account';
     const fromType = tx.fromAccountType || accountsById[String(tx.fromAccountId)]?.type || '';
     const toName = tx.toAccountName || accountsById[String(tx.toAccountId)]?.name || 'Account';
@@ -161,12 +161,14 @@ export default function Dashboard() {
 
   const monthIncome = txs.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const budgetOffsetIncome = txs.filter((t) => t.type === 'income' && t.category !== 'Salary').reduce((s, t) => s + t.amount, 0);
-  const monthExpense = txs.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-  const budgetExpense = txs.filter((t) => t.type === 'expense' && t.category !== 'Debt').reduce((s, t) => s + t.amount, 0);
+  const monthCashExpense = txs.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const monthCreditExpense = txs.filter((t) => t.type === 'credit_expense').reduce((s, t) => s + t.amount, 0);
+  const totalSpending = monthCashExpense + monthCreditExpense;
+  const budgetExpense = txs.filter((t) => (t.type === 'expense' || t.type === 'credit_expense') && t.category !== 'Debt').reduce((s, t) => s + t.amount, 0);
   const endRunning = txs.length ? txs[0].runningBalance : opening;
 
   const monthTitle = formatMonthLong(new Date(month + '-01T12:00:00'));
-  const netMonth = monthIncome - monthExpense;
+  const netMonth = monthIncome - monthCashExpense;
 
   const editTxNormalized = editTx
     ? {
@@ -361,12 +363,12 @@ export default function Dashboard() {
           </strong>
         </div>
         <div className="stat">
-          <span>Expenses</span>
-          <strong className="type-expense">{formatMoney(monthExpense)}</strong>
+          <span>Spending</span>
+          <strong className="type-expense">{formatMoney(totalSpending)}</strong>
         </div>
         <div className="stat">
           <span className="stat-title-row">
-            <span>Net (month)</span>
+            <span>Cash Flow</span>
             <button
               type="button"
               className="stat-eye-btn"
@@ -453,9 +455,10 @@ export default function Dashboard() {
               </div>
               <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                 {dayTxs.map((tx) => {
-                  const isExpense = tx.type === 'expense';
+                  const isExpense = tx.type === 'expense' || tx.type === 'credit_expense';
                   const isIncome = tx.type === 'income';
                   const isTransfer = tx.type === 'transfer';
+                  const isCreditPayment = tx.type === 'credit_payment';
                   const isBalUpdate = tx.type === 'balance_update';
 
                   let signPrefix = '';
@@ -466,7 +469,7 @@ export default function Dashboard() {
                   if (isExpense) {
                     signPrefix = '−';
                     amtCls = 'expense';
-                    iconCls = 'expense';
+                    iconCls = tx.type === 'credit_expense' ? 'credit-expense' : 'expense';
                   } else if (isIncome) {
                     signPrefix = '+';
                     amtCls = 'income';
@@ -477,7 +480,7 @@ export default function Dashboard() {
                     amtCls = d >= 0 ? 'income' : 'expense';
                     iconCls = 'balance-update';
                   } else {
-                    iconCls = 'transfer';
+                    iconCls = isCreditPayment ? 'credit-payment' : 'transfer';
                   }
 
                   const subtitle = txSubtitle(tx, accountsById);
@@ -497,8 +500,17 @@ export default function Dashboard() {
                             }
                           }}
                         >
-                          <div className={`tx-icon-circle ${iconCls}`}>
-                            {isIncome ? (
+                          <div className={`tx-icon-circle ${iconCls}`} style={iconCls.includes('credit') ? { background: 'var(--card)', color: 'var(--primary)' } : {}}>
+                            {tx.type === 'credit_expense' ? (
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                <line x1="1" y1="10" x2="23" y2="10"></line>
+                              </svg>
+                            ) : tx.type === 'credit_payment' ? (
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                              </svg>
+                            ) : isIncome ? (
                               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M7 7l10 10M17 7v10H7" transform="rotate(180 12 12)" />
                               </svg>
