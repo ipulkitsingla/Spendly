@@ -30,7 +30,7 @@ router.get('/summary', async (req, res) => {
         totalIncome += tx.amount;
         categoryMap[tx.category] = categoryMap[tx.category] || { income: 0, expense: 0 };
         categoryMap[tx.category].income += tx.amount;
-      } else if (tx.type === 'expense') {
+      } else if (tx.type === 'expense' || tx.type === 'credit_expense') {
         totalExpense += tx.amount;
         categoryMap[tx.category] = categoryMap[tx.category] || { income: 0, expense: 0 };
         categoryMap[tx.category].expense += tx.amount;
@@ -78,14 +78,14 @@ router.get('/timeseries', async (req, res) => {
         $match: {
           userId,
           date: { $gte: fromDate, $lte: toDate },
-          type: { $in: ['income', 'expense'] },
+          type: { $in: ['income', 'expense', 'credit_expense'] },
         },
       },
       {
         $group: {
           _id: { $dateToString: { format, date: '$date' } },
           income: { $sum: { $cond: [{ $eq: ['$type', 'income'] }, '$amount', 0] } },
-          expense: { $sum: { $cond: [{ $eq: ['$type', 'expense'] }, '$amount', 0] } },
+          expense: { $sum: { $cond: [{ $in: ['$type', ['expense', 'credit_expense']] }, '$amount', 0] } },
         },
       },
       { $sort: { _id: 1 } },
