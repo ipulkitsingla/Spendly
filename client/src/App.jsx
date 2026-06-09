@@ -8,6 +8,7 @@ import { APP_VERSION } from './utils/appMeta.js';
 
 const Login = lazy(() => import('./pages/Login.jsx'));
 const Register = lazy(() => import('./pages/Register.jsx'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'));
 const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
 const StatsPage = lazy(() => import('./pages/StatsPage.jsx'));
 const AccountsPage = lazy(() => import('./pages/AccountsPage.jsx'));
@@ -49,6 +50,10 @@ export default function App() {
           <Route
             path="/register"
             element={!loading && user ? <Navigate to="/" replace /> : <Register />}
+          />
+          <Route
+            path="/forgot-password"
+            element={!loading && user ? <Navigate to="/" replace /> : <ForgotPassword />}
           />
           <Route
             path="/"

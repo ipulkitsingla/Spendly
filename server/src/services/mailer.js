@@ -36,17 +36,27 @@ export async function verifyMailerConnection() {
 }
 
 export async function sendEmail({ to, subject, html, text, attachments }) {
-  if (!emailEnabled()) return { skipped: true };
-  const t = getTransporter();
-  const info = await t.sendMail({
-    from: EMAIL_FROM,
-    to,
-    subject,
-    html,
-    text,
-    attachments: Array.isArray(attachments) ? attachments : undefined,
-  });
-  return { skipped: false, messageId: info?.messageId || null };
+  if (!emailEnabled()) {
+    console.log(`[MAILER] Skipped sending email to ${to} because SMTP credentials are not configured in .env.`);
+    return { skipped: true };
+  }
+  console.log(`[MAILER] Attempting to send email to ${to}...`);
+  try {
+    const t = getTransporter();
+    const info = await t.sendMail({
+      from: EMAIL_FROM,
+      to,
+      subject,
+      html,
+      text,
+      attachments: Array.isArray(attachments) ? attachments : undefined,
+    });
+    console.log(`[MAILER] Successfully sent email to ${to}. Message ID: ${info?.messageId}`);
+    return { skipped: false, messageId: info?.messageId || null };
+  } catch (error) {
+    console.error(`[MAILER] ERROR sending email to ${to}:`, error);
+    throw error;
+  }
 }
 
 export function formatInr(value) {

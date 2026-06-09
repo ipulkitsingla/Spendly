@@ -10,7 +10,7 @@ export function apiUrl(path) {
 /** Plain fetch to API (no offline layer). Used by sync and api wrapper. */
 export async function rawRequest(path, options = {}) {
   const headers = { ...options.headers };
-  if (options.body && !headers['Content-Type']) {
+  if (options.body && !headers['Content-Type'] && !(options.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
   }
   const token = getToken();

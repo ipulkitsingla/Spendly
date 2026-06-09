@@ -130,6 +130,18 @@ export const api = {
     if (!browserOnline()) throw new Error('You need an internet connection to log in.');
     return rawRequest('/api/auth/login', { method: 'POST', body: JSON.stringify(body) });
   },
+  forgotPassword: (email) => {
+    if (!browserOnline()) throw new Error('You need an internet connection to reset your password.');
+    return rawRequest('/api/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
+  },
+  verifyOtp: (email, otp) => {
+    if (!browserOnline()) throw new Error('You need an internet connection to verify your OTP.');
+    return rawRequest('/api/auth/verify-otp', { method: 'POST', body: JSON.stringify({ email, otp }) });
+  },
+  resetPassword: (resetToken, newPassword) => {
+    if (!browserOnline()) throw new Error('You need an internet connection to reset your password.');
+    return rawRequest('/api/auth/reset-password', { method: 'POST', body: JSON.stringify({ resetToken, newPassword }) });
+  },
   me: () => rawRequest('/api/auth/me'),
   updateEmailPreferences: (body) =>
     rawRequest('/api/auth/email-preferences', { method: 'PATCH', body: JSON.stringify(body) }),
@@ -385,5 +397,5 @@ export const api = {
     return rawRequest(
       `/api/stats/timeseries?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&bucket=${bucket}`
     );
-  },
+  }
 };

@@ -5,6 +5,7 @@ import User from '../models/User.js';
 import Account from '../models/Account.js';
 import { authRequired, JWT_SECRET } from '../middleware/auth.js';
 import { triggerWelcomeEmail } from '../services/reminderScheduler.js';
+import { sendEmail } from '../services/mailer.js';
 
 const router = Router();
 
@@ -118,6 +119,106 @@ router.patch('/budget', authRequired, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to update budget' });
+  }
+});
+
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Email is required' });
+    
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      console.log(`[AUTH] Forgot password requested for unregistered email: ${email}`);
+      // Return 200 to prevent email enumeration
+      return res.json({ message: 'If an account with that email exists, an OTP has been sent.' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetOtp = otp;
+    user.resetOtpExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+    await user.save();
+
+    console.log(`[AUTH] Generated OTP ${otp} for ${user.email}`);
+
+    const emailResult = await sendEmail({
+      to: user.email,
+      subject: 'Spendly Password Reset OTP',
+      text: `Your password reset code is: ${otp}\nThis code will expire in 15 minutes.`,
+      html: `<h2>Password Reset</h2><p>Your 6-digit code is: <strong>${otp}</strong></p><p>This code will expire in 15 minutes.</p>`,
+    });
+
+    if (emailResult.skipped) {
+      console.warn(`[AUTH] WARNING: Email was not sent because SMTP is not configured. The OTP is: ${otp}`);
+    }
+
+    res.json({ message: 'If an account with that email exists, an OTP has been sent.' });
+  } catch (err) {
+    console.error('[AUTH] Forgot Password Error:', err);
+    res.status(500).json({ message: 'Failed to process request' });
+  }
+});
+
+router.post('/verify-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ message: 'Email and OTP are required' });
+
+    const user = await User.findOne({
+      email: email.toLowerCase(),
+      resetOtp: otp,
+      resetOtpExpires: { $gt: new Date() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+
+    // Generate a temporary reset token (valid for 15 mins)
+    const resetToken = jwt.sign({ resetUserId: user._id.toString() }, JWT_SECRET, { expiresIn: '15m' });
+    
+    // Clear OTP so it can't be reused
+    user.resetOtp = undefined;
+    user.resetOtpExpires = undefined;
+    await user.save();
+
+    res.json({ resetToken });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to verify OTP' });
+  }
+});
+
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { resetToken, newPassword } = req.body;
+    if (!resetToken || !newPassword) {
+      return res.status(400).json({ message: 'Reset token and new password are required' });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(resetToken, JWT_SECRET);
+    } catch (e) {
+      return res.status(400).json({ message: 'Invalid or expired reset token' });
+    }
+
+    if (!decoded.resetUserId) {
+      return res.status(400).json({ message: 'Invalid token payload' });
+    }
+
+    const user = await User.findById(decoded.resetUserId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    res.json({ message: 'Password has been reset successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to reset password' });
   }
 });
 

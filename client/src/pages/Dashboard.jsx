@@ -71,6 +71,7 @@ export default function Dashboard() {
   const [showBio, setShowBio] = useState(false);
   const [faceErr, setFaceErr] = useState('');
   const [showBudgetModal, setShowBudgetModal] = useState(false);
+  const [showBudgetBreakdown, setShowBudgetBreakdown] = useState(false);
   const [budgetInput, setBudgetInput] = useState('');
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -164,8 +165,23 @@ export default function Dashboard() {
   const monthCashExpense = txs.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   const monthCreditExpense = txs.filter((t) => t.type === 'credit_expense').reduce((s, t) => s + t.amount, 0);
   const totalSpending = monthCashExpense + monthCreditExpense;
-  const budgetExpense = txs.filter((t) => (t.type === 'expense' || t.type === 'credit_expense') && t.category !== 'Debt').reduce((s, t) => s + t.amount, 0);
+  const budgetExpense = txs.filter((t) => (t.type === 'expense' || t.type === 'credit_expense')).reduce((s, t) => s + t.amount, 0);
   const endRunning = txs.length ? txs[0].runningBalance : opening;
+
+  const budgetBreakdown = useMemo(() => {
+    const cats = {};
+    for (const tx of txs) {
+      if (tx.type === 'expense' || tx.type === 'credit_expense') {
+        cats[tx.category] = (cats[tx.category] || 0) + tx.amount;
+      }
+      if (tx.type === 'income' && tx.category !== 'Salary') {
+        cats[tx.category] = (cats[tx.category] || 0) - tx.amount;
+      }
+    }
+    return Object.entries(cats)
+      .filter(([_, amt]) => amt !== 0)
+      .sort((a, b) => b[1] - a[1]);
+  }, [txs]);
 
   const monthTitle = formatMonthLong(new Date(month + '-01T12:00:00'));
   const netMonth = monthIncome - monthCashExpense;
@@ -398,10 +414,7 @@ export default function Dashboard() {
       </div>
 
       {user?.monthlyBudget > 0 && !accountFilter && (
-        <div className="card dashboard-budget-card" onClick={() => {
-          setBudgetInput(user.monthlyBudget.toString());
-          setShowBudgetModal(true);
-        }}>
+        <div className="card dashboard-budget-card" onClick={() => setShowBudgetBreakdown(true)}>
           <div className="budget-info">
             <div className="budget-label">
               <span>Monthly Budget</span>
@@ -607,6 +620,43 @@ export default function Dashboard() {
                 <button type="submit" className="btn btn-primary">Save Budget</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {showBudgetBreakdown && (
+        <div className="modal-backdrop" onClick={() => setShowBudgetBreakdown(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">Budget Breakdown</h3>
+              <button type="button" className="btn-close" onClick={() => setShowBudgetBreakdown(false)}>×</button>
+            </div>
+            <div className="modal-body" style={{ padding: '16px 0', maxHeight: '50vh', overflowY: 'auto' }}>
+              {budgetBreakdown.length === 0 ? (
+                <p className="empty" style={{ margin: 0 }}>No spending yet this month.</p>
+              ) : (
+                <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                  {budgetBreakdown.map(([cat, amt]) => (
+                    <li key={cat} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span className="tx-icon-circle" style={{ width: 32, height: 32, fontSize: '0.9rem' }}>{categoryIcon(cat)}</span>
+                        <span style={{ fontWeight: 500 }}>{cat}</span>
+                      </div>
+                      <strong className={amt > 0 ? 'type-expense' : 'type-income'}>
+                        {amt > 0 ? '−' : '+'}{formatMoney(Math.abs(amt))}
+                      </strong>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="modal-actions" style={{ justifyContent: 'space-between' }}>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => {
+                setShowBudgetBreakdown(false);
+                setBudgetInput(user?.monthlyBudget?.toString() || '');
+                setShowBudgetModal(true);
+              }}>Edit Budget Amount</button>
+              <button type="button" className="btn btn-primary" onClick={() => setShowBudgetBreakdown(false)}>Done</button>
+            </div>
           </div>
         </div>
       )}

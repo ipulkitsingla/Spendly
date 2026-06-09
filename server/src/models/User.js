@@ -36,6 +36,8 @@ const userSchema = new mongoose.Schema(
       welcomeSignup: { type: Boolean, default: true },
     },
     monthlyBudget: { type: Number, default: 0 },
+    resetOtp: { type: String },
+    resetOtpExpires: { type: Date },
   },
   { timestamps: true }
 );
