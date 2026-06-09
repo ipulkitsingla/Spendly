@@ -529,9 +529,16 @@ export default function Dashboard() {
                             <div className="tx-v3-title">{tx.category}</div>
                             <div className="tx-v3-subtitle">{subtitle}</div>
                           </div>
-                          <div className={`tx-v3-amt ${amtCls}`}>
-                            {signPrefix}
-                            {formatMoney(showAbs)}
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                            <div className={`tx-v3-amt ${amtCls}`}>
+                              {signPrefix}
+                              {formatMoney(showAbs)}
+                            </div>
+                            {tx.accountRunningBalance != null && (
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px', fontWeight: 500 }}>
+                                Bal: {formatMoney(tx.accountRunningBalance)}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </SwipeableRow>
