@@ -5,6 +5,7 @@ export default function CalculatorWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [display, setDisplay] = useState('0');
   const [equation, setEquation] = useState('');
+  const [waitingForOperand, setWaitingForOperand] = useState(false);
   
   const [position, setPosition] = useState({ x: typeof window !== 'undefined' ? window.innerWidth - 280 : 0, y: 70 });
   const [isDragging, setIsDragging] = useState(false);
@@ -46,7 +47,10 @@ export default function CalculatorWidget() {
 
   
   const handleDigit = (digit) => {
-    if (display === '0' || display === 'Error') {
+    if (waitingForOperand) {
+      setDisplay(digit);
+      setWaitingForOperand(false);
+    } else if (display === '0' || display === 'Error') {
       setDisplay(digit);
     } else {
       setDisplay(display + digit);
@@ -55,13 +59,19 @@ export default function CalculatorWidget() {
 
   const handleOperator = (op) => {
     if (display === 'Error') return;
-    setEquation(display + ' ' + op + ' ');
-    setDisplay('0');
+    
+    if (waitingForOperand && equation !== '') {
+      setEquation(equation.slice(0, -3) + ' ' + op + ' ');
+      return;
+    }
+
+    setEquation(equation + display + ' ' + op + ' ');
+    setWaitingForOperand(true);
   };
 
   const calculate = () => {
     try {
-      if (!equation) return;
+      if (!equation || waitingForOperand) return;
       // Using new Function instead of eval for a bit more safety, though it's evaluating math.
       const fullEq = equation + display;
       // eslint-disable-next-line no-new-func
@@ -69,18 +79,24 @@ export default function CalculatorWidget() {
       const rounded = Math.round(result * 100) / 100;
       setDisplay(String(rounded));
       setEquation('');
+      setWaitingForOperand(true);
     } catch (err) {
       setDisplay('Error');
       setEquation('');
+      setWaitingForOperand(true);
     }
   };
 
   const clear = () => {
     setDisplay('0');
     setEquation('');
+    setWaitingForOperand(false);
   };
 
   const handleDel = () => {
+    if (waitingForOperand) {
+      setWaitingForOperand(false);
+    }
     if (display.length > 1) {
       setDisplay(display.slice(0, -1));
     } else {
