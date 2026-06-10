@@ -4,6 +4,7 @@ import { useAuth } from './context/AuthContext.jsx';
 import { PrivacyProvider } from './context/PrivacyContext.jsx';
 import AppLayout from './components/AppLayout.jsx';
 import ThemeToggle from './components/ThemeToggle.jsx';
+import CalculatorWidget from './components/CalculatorWidget.jsx';
 import { APP_VERSION } from './utils/appMeta.js';
 
 const Login = lazy(() => import('./pages/Login.jsx'));
@@ -41,6 +42,7 @@ export default function App() {
   return (
     <>
       <ThemeToggle />
+      <CalculatorWidget />
       <Suspense fallback={<Loading />}>
         <Routes>
           <Route

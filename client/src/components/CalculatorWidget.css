@@ -1,0 +1,111 @@
+.calc-toggle {
+  position: fixed;
+  top: max(10px, env(safe-area-inset-top));
+  right: max(68px, calc(env(safe-area-inset-right) + 68px));
+  z-index: 55;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  border: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.45);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  transition: transform 0.12s ease, background 0.15s ease;
+}
+
+.calc-toggle:active {
+  transform: scale(0.96);
+}
+
+.calc-toggle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calc-widget {
+  position: fixed;
+  top: max(64px, calc(env(safe-area-inset-top) + 64px));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 60;
+  width: 260px;
+  border-radius: var(--radius);
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.85);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  animation: scaleUp 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.calc-screen {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+  text-align: right;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.calc-equation {
+  font-size: 0.8rem;
+  color: var(--muted);
+  min-height: 1.2rem;
+}
+
+.calc-display {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calc-pad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.calc-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 12px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+  transition: background 0.1s ease, transform 0.1s ease;
+  cursor: pointer;
+  outline: none;
+}
+
+.calc-btn:active {
+  transform: scale(0.92);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.calc-btn-act {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.calc-btn-op {
+  color: var(--accent);
+  background: rgba(74, 222, 128, 0.1);
+}
+
+.calc-btn-eq {
+  background: var(--accent);
+  color: #000;
+  grid-row: span 2;
+  height: 100%;
+}
+
+.calc-btn-zero {
+  grid-column: span 2;
+}
