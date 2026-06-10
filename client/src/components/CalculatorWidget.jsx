@@ -1,10 +1,49 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import './CalculatorWidget.css';
 
 export default function CalculatorWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [display, setDisplay] = useState('0');
   const [equation, setEquation] = useState('');
+  
+  const [position, setPosition] = useState({ x: typeof window !== 'undefined' ? window.innerWidth - 280 : 0, y: 70 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragOffset = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleResize = () => {
+      // Keep it within bounds if window resizes, basic protection
+      setPosition(prev => ({
+        x: Math.min(prev.x, window.innerWidth - 260),
+        y: Math.min(prev.y, window.innerHeight - 300)
+      }));
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handlePointerDown = (e) => {
+    setIsDragging(true);
+    dragOffset.current = {
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
+    };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e) => {
+    if (!isDragging) return;
+    // Bound to screen
+    const newX = Math.max(0, Math.min(e.clientX - dragOffset.current.x, window.innerWidth - 260));
+    const newY = Math.max(0, Math.min(e.clientY - dragOffset.current.y, window.innerHeight - 300));
+    setPosition({ x: newX, y: newY });
+  };
+
+  const handlePointerUp = (e) => {
+    setIsDragging(false);
+    e.currentTarget.releasePointerCapture(e.pointerId);
+  };
+
   
   const handleDigit = (digit) => {
     if (display === '0' || display === 'Error') {
@@ -69,7 +108,20 @@ export default function CalculatorWidget() {
       </button>
 
       {isOpen && (
-        <div className="calc-widget glass">
+        <div 
+          className="calc-widget glass"
+          style={{ transform: `translate(${position.x}px, ${position.y}px)`, transition: isDragging ? 'none' : 'transform 0.1s ease' }}
+        >
+          <div 
+            className="calc-drag-handle"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            title="Drag to move"
+          >
+            <div className="calc-drag-indicator"></div>
+          </div>
           <div className="calc-screen">
             <div className="calc-equation">{equation}</div>
             <div className="calc-display">{display}</div>
