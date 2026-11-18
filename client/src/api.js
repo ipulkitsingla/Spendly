@@ -146,6 +146,8 @@ export const api = {
   updateEmailPreferences: (body) =>
     rawRequest('/api/auth/email-preferences', { method: 'PATCH', body: JSON.stringify(body) }),
   updateBudget: (budget) => rawRequest('/api/auth/budget', { method: 'PATCH', body: JSON.stringify({ budget }) }),
+  updatePayday: (paydayDayOfMonth) =>
+    rawRequest('/api/auth/payday', { method: 'PATCH', body: JSON.stringify({ paydayDayOfMonth }) }),
   accounts: () => request('/api/accounts'),
   createAccount: async (body) => {
     if (browserOnline()) {
@@ -397,5 +399,5 @@ export const api = {
     return rawRequest(
       `/api/stats/timeseries?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&bucket=${bucket}`
     );
-  }
+  },
 };

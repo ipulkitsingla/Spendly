@@ -178,3 +178,30 @@ html[data-theme='light'] .theme-toggle {
   border-color: rgba(15, 23, 42, 0.1);
   box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
 }
+
+html[data-theme='light'] body {
+  background-color: #f5f7fa;
+  background-image:
+    radial-gradient(120% 90% at 50% -30%, rgba(220, 230, 245, 0.5), transparent 55%),
+    linear-gradient(165deg, #ffffff 0%, #f4f6fa 45%, #f0f4f9 100%);
+  color: #0f172a;
+}
+
+html[data-theme='light'] .bottom-nav {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme='light'] .bottom-nav a {
+  color: #94a3b8;
+}
+
+html[data-theme='light'] .bottom-nav a.active {
+  color: #0f172a;
+}
+
+html[data-theme='light'] .bottom-nav a.active::before {
+  background: rgba(15, 23, 42, 0.06);
+  border-color: transparent;
+}

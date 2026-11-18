@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { runExpenseReminder, runMonthlyStatementEmail, runPendingDebtReminder, resetEmailLogs } from '../services/reminderScheduler.js';
+import { verifyMailerConnection } from '../services/mailer.js';
 
 const router = Router();
 
@@ -20,6 +21,11 @@ function ensureCronAuth(req, res, next) {
 
 router.get('/health', (_, res) => {
   res.json({ ok: true });
+});
+
+router.get('/smtp-status', async (_, res) => {
+  const status = await verifyMailerConnection();
+  res.json(status);
 });
 
 router.all('/expense-reminder', ensureCronAuth, async (req, res) => {

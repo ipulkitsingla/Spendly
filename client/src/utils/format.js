@@ -19,6 +19,8 @@ export function formatMoney(n) {
   }).format(n);
 }
 
+export const formatINR = formatMoney;
+
 export function formatDay(iso) {
   return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(new Date(iso));
 }

@@ -1,0 +1,307 @@
+/* Light theme — variables + surfaces that use hardcoded dark colors */
+
+html[data-theme='light'] {
+  --bg: #f1f5f9;
+  --text: #0f172a;
+  --muted: rgba(15, 23, 42, 0.55);
+  --surface: rgba(255, 255, 255, 0.88);
+  --surface-2: rgba(255, 255, 255, 0.95);
+  --border: rgba(15, 23, 42, 0.1);
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-deep: rgba(241, 245, 249, 0.85);
+  --glass-edge: rgba(255, 255, 255, 0.95);
+  --glass-blur: blur(22px) saturate(160%);
+  --income: #15803d;
+  --expense: #e11d48;
+  --transfer: #2563eb;
+  --balance-update: #7c3aed;
+  --pending: #c2410c;
+  --pending-muted: rgba(15, 23, 42, 0.5);
+}
+
+html[data-theme='light'] body {
+  background-color: #f1f5f9;
+  background-image:
+    radial-gradient(120% 90% at 50% -30%, rgba(34, 197, 94, 0.14), transparent 55%),
+    radial-gradient(90% 70% at 100% 10%, rgba(139, 92, 246, 0.1), transparent 50%),
+    radial-gradient(80% 60% at 0% 80%, rgba(56, 189, 248, 0.1), transparent 55%),
+    linear-gradient(165deg, #f8fafc 0%, #e2e8f0 45%, #f1f5f9 100%);
+  color: var(--text);
+}
+
+html[data-theme='light'] .glass {
+  box-shadow:
+    0 8px 32px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 var(--glass-edge);
+}
+
+html[data-theme='light'] .glass-bleed {
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.06);
+}
+
+html[data-theme='light'] .card {
+  box-shadow:
+    0 12px 30px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+html[data-theme='light'] .btn-primary {
+  box-shadow:
+    0 12px 26px rgba(21, 128, 61, 0.2),
+    0 0 0 1px rgba(34, 197, 94, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32);
+}
+
+html[data-theme='light'] .btn-primary:hover {
+  box-shadow:
+    0 16px 30px rgba(21, 128, 61, 0.24),
+    0 0 16px rgba(34, 197, 94, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
+}
+
+html[data-theme='light'] .btn-ghost {
+  background: rgba(15, 23, 42, 0.04);
+  color: var(--text);
+}
+
+html[data-theme='light'] .input {
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--text);
+}
+
+html[data-theme='light'] .bottom-nav {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(241, 245, 249, 0.96));
+  border-top-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 -8px 40px rgba(15, 23, 42, 0.06);
+}
+
+html[data-theme='light'] .bottom-nav a.active {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+html[data-theme='light'] .offline-bar {
+  background: rgba(251, 191, 36, 0.2);
+  border-color: rgba(217, 119, 6, 0.35);
+  color: #78350f;
+}
+
+html[data-theme='light'] .offline-bar--sync {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(2, 132, 199, 0.35);
+  color: #0c4a6e;
+}
+
+html[data-theme='light'] .tx-row-v2:active {
+  background: rgba(15, 23, 42, 0.04);
+}
+
+html[data-theme='light'] .tx-icon-tile {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme='light'] .swipe-row-actions {
+  background: linear-gradient(90deg, rgba(241, 245, 249, 0.3) 0%, rgba(226, 232, 240, 0.97) 42%, #e2e8f0 100%);
+}
+
+html[data-theme='light'] .swipe-row-wrap:not(.swipe-row-wrap--open) .swipe-act-edit,
+html[data-theme='light'] .swipe-row-wrap:not(.swipe-row-wrap--open) .swipe-act-del {
+  color: rgba(51, 65, 85, 0.95);
+}
+
+html[data-theme='light'] .balance-masthead {
+  box-shadow:
+    0 24px 52px rgba(15, 23, 42, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme='light'] .modal-backdrop {
+  background: rgba(241, 245, 249, 0.65);
+}
+
+html[data-theme='light'] .modal {
+  background: linear-gradient(165deg, #ffffff, #f8fafc);
+  border-color: rgba(15, 23, 42, 0.1);
+  color: var(--text);
+}
+
+html[data-theme='light'] .auth-screen {
+  background: linear-gradient(165deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
+}
+
+html[data-theme='light'] .recharts-cartesian-grid line,
+html[data-theme='light'] .recharts-cartesian-axis line {
+  stroke: #cbd5e1;
+}
+
+html[data-theme='light'] .recharts-text {
+  fill: #64748b;
+}
+
+html[data-theme='light'] .month-bar button {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+html[data-theme='light'] .pill:not(.active) {
+  background: rgba(15, 23, 42, 0.04);
+}
+
+html[data-theme='light'] .tx-group-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.06);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+}
+
+html[data-theme='light'] .tx-group-header {
+  background: rgba(15, 23, 42, 0.01);
+  border-bottom-color: rgba(15, 23, 42, 0.04);
+}
+
+html[data-theme='light'] .tx-row-v3 {
+  border-bottom-color: rgba(15, 23, 42, 0.04);
+}
+
+html[data-theme='light'] .tx-v3-title {
+  color: #1e293b;
+}
+
+html[data-theme='light'] .tx-v3-subtitle {
+  color: #64748b;
+}
+
+html[data-theme='light'] .theme-toggle {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme='light'] body {
+  background-color: #f5f7fa;
+  background-image:
+    radial-gradient(120% 90% at 50% -30%, rgba(220, 230, 245, 0.5), transparent 55%),
+    linear-gradient(165deg, #ffffff 0%, #f4f6fa 45%, #f0f4f9 100%);
+  color: #0f172a;
+}
+
+html[data-theme='light'] .bottom-nav {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme='light'] .bottom-nav a {
+  color: #94a3b8;
+}
+
+html[data-theme='light'] .bottom-nav a.active {
+  color: #0f172a;
+}
+
+html[data-theme='light'] .bottom-nav a.active::before {
+  background: rgba(15, 23, 42, 0.06);
+  border-color: transparent;
+}
+
+/* Light Theme Overrides for Spendly AI */
+html[data-theme='light'] .fintech-ai-smart-banner {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(6, 214, 160, 0.08) 50%, rgba(255, 255, 255, 0.9) 100%);
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow: 0 10px 30px rgba(139, 92, 246, 0.08);
+}
+
+html[data-theme='light'] .fintech-ai-banner-title {
+  color: #0f172a;
+}
+
+html[data-theme='light'] .fintech-ai-banner-sub {
+  color: rgba(15, 23, 42, 0.65);
+}
+
+html[data-theme='light'] .fintech-ai-chip {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.1);
+  color: #334155;
+}
+
+html[data-theme='light'] .ai-header-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 243, 255, 0.9) 100%);
+  border-color: rgba(139, 92, 246, 0.25);
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme='light'] .ai-title {
+  color: #0f172a;
+}
+
+html[data-theme='light'] .ai-vitals-strip {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme='light'] .ai-vital-val {
+  color: #0f172a;
+}
+
+html[data-theme='light'] .ai-card {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.06);
+}
+
+html[data-theme='light'] .ai-card-title,
+html[data-theme='light'] .ai-feature-hero h2,
+html[data-theme='light'] .ai-md-h3,
+html[data-theme='light'] .ai-md-bold {
+  color: #0f172a;
+}
+
+html[data-theme='light'] .ai-msg-assistant .ai-msg-bubble {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(15, 23, 42, 0.1);
+  color: #1e293b;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+html[data-theme='light'] .ai-chat-input-form {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(139, 92, 246, 0.35);
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme='light'] .ai-chat-input {
+  color: #0f172a;
+}
+
+html[data-theme='light'] .ai-chat-input::placeholder {
+  color: rgba(15, 23, 42, 0.4);
+}
+
+html[data-theme='light'] .ai-text-input,
+html[data-theme='light'] .ai-num-input {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.15);
+  color: #0f172a;
+}
+
+html[data-theme='light'] .ai-tab-btn {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.1);
+  color: #64748b;
+}
+
+html[data-theme='light'] .ai-tab-btn.active {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(6, 214, 160, 0.12));
+  color: #7c3aed;
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+html[data-theme='light'] .ai-inline-card {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+

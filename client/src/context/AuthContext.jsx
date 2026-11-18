@@ -41,6 +41,7 @@ function normalizeProfile(u) {
       welcomeSignup: u?.emailPreferences?.welcomeSignup !== false,
     },
     monthlyBudget: Number(u.monthlyBudget || 0),
+    paydayDayOfMonth: Number(u.paydayDayOfMonth || 1),
   };
 }
 
@@ -132,6 +133,20 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  const updatePayday = async (day) => {
+    const data = await api.updatePayday(day);
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = {
+        ...prev,
+        paydayDayOfMonth: Number(data.paydayDayOfMonth),
+      };
+      writeCachedUser(next);
+      return next;
+    });
+    return data;
+  };
+
   const logout = () => {
     localStorage.removeItem('spendly_token');
     clearCachedUser();
@@ -139,7 +154,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateEmailPreferences, updateBudget }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateEmailPreferences, updateBudget, updatePayday }}>
       {children}
     </AuthContext.Provider>
   );

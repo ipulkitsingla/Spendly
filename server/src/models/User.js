@@ -36,6 +36,7 @@ const userSchema = new mongoose.Schema(
       welcomeSignup: { type: Boolean, default: true },
     },
     monthlyBudget: { type: Number, default: 0 },
+    paydayDayOfMonth: { type: Number, min: 1, max: 31, default: 1 },
     resetOtp: { type: String },
     resetOtpExpires: { type: Date },
   },

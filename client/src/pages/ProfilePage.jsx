@@ -7,7 +7,7 @@ import { downloadMonthStatementPdf } from '../utils/pdfExport.js';
 import { APP_VERSION } from '../utils/appMeta.js';
 
 export default function ProfilePage() {
-  const { user, logout, updateEmailPreferences } = useAuth();
+  const { user, logout, updateEmailPreferences, updatePayday, updateBudget } = useAuth();
   const [accounts, setAccounts] = useState([]);
   const [exportMonth, setExportMonth] = useState(() => monthKey());
   const [exportAccountId, setExportAccountId] = useState('');
@@ -15,6 +15,46 @@ export default function ProfilePage() {
   const [pdfErr, setPdfErr] = useState('');
   const [emailPrefSaving, setEmailPrefSaving] = useState('');
   const [emailPrefErr, setEmailPrefErr] = useState('');
+
+  const [paydayDay, setPaydayDay] = useState(user?.paydayDayOfMonth || 1);
+  const [paydayMsg, setPaydayMsg] = useState('');
+  const [paydaySaving, setPaydaySaving] = useState(false);
+  const [budgetVal, setBudgetVal] = useState(user?.monthlyBudget || 0);
+  const [budgetMsg, setBudgetMsg] = useState('');
+  const [budgetSaving, setBudgetSaving] = useState(false);
+
+  useEffect(() => {
+    if (user?.paydayDayOfMonth) setPaydayDay(user.paydayDayOfMonth);
+    if (user?.monthlyBudget !== undefined) setBudgetVal(user.monthlyBudget);
+  }, [user]);
+
+  const onSavePayday = async () => {
+    setPaydaySaving(true);
+    setPaydayMsg('');
+    try {
+      await updatePayday(Number(paydayDay));
+      setPaydayMsg('Payday saved successfully!');
+      setTimeout(() => setPaydayMsg(''), 3000);
+    } catch (e) {
+      setPaydayMsg(e?.message || 'Failed to update payday.');
+    } finally {
+      setPaydaySaving(false);
+    }
+  };
+
+  const onSaveBudget = async () => {
+    setBudgetSaving(true);
+    setBudgetMsg('');
+    try {
+      await updateBudget(Number(budgetVal));
+      setBudgetMsg('Budget saved successfully!');
+      setTimeout(() => setBudgetMsg(''), 3000);
+    } catch (e) {
+      setBudgetMsg(e?.message || 'Failed to update budget.');
+    } finally {
+      setBudgetSaving(false);
+    }
+  };
 
   useEffect(() => {
     api
@@ -134,6 +174,83 @@ export default function ProfilePage() {
             {pdfLoading ? 'Building PDF...' : 'Download PDF Statement'}
           </button>
           {pdfErr && <p className="error-text">{pdfErr}</p>}
+        </section>
+
+        <section className="card settings-card animate-fade-up">
+          <div className="card-header-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            <h3>Payday & Financial Planning</h3>
+          </div>
+          <p className="card-desc">
+            Set your recurring payday to calculate your payday countdown and track your monthly budget cycle.
+          </p>
+
+          <div className="export-options" style={{ marginTop: 14 }}>
+            <div className="form-group">
+              <label className="label">Monthly Payday</label>
+              <select
+                className="input"
+                value={paydayDay}
+                onChange={(e) => setPaydayDay(Number(e.target.value))}
+              >
+                {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                  <option key={d} value={d}>
+                    Day {d} of month {d === 1 ? '(1st)' : d === 2 ? '(2nd)' : d === 3 ? '(3rd)' : `(${d}th)`}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <button
+                type="button"
+                className="btn btn-primary btn-block"
+                disabled={paydaySaving}
+                onClick={onSavePayday}
+              >
+                {paydaySaving ? 'Saving...' : 'Save Payday'}
+              </button>
+            </div>
+          </div>
+          {paydayMsg && (
+            <p className={paydayMsg.includes('Failed') ? 'error-text' : 'success-text'} style={{ marginTop: 6, fontSize: '0.82rem' }}>
+              {paydayMsg}
+            </p>
+          )}
+
+          <div className="export-options" style={{ marginTop: 14 }}>
+            <div className="form-group">
+              <label className="label">Monthly Expense Budget (₹)</label>
+              <input
+                type="number"
+                className="input"
+                value={budgetVal}
+                min="0"
+                step="500"
+                onChange={(e) => setBudgetVal(e.target.value)}
+                placeholder="e.g. 35000"
+              />
+            </div>
+            <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <button
+                type="button"
+                className="btn btn-primary btn-block"
+                disabled={budgetSaving}
+                onClick={onSaveBudget}
+              >
+                {budgetSaving ? 'Saving...' : 'Save Budget'}
+              </button>
+            </div>
+          </div>
+          {budgetMsg && (
+            <p className={budgetMsg.includes('Failed') ? 'error-text' : 'success-text'} style={{ marginTop: 6, fontSize: '0.82rem' }}>
+              {budgetMsg}
+            </p>
+          )}
         </section>
 
         <section className="card settings-card animate-fade-up">

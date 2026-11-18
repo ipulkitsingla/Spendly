@@ -172,7 +172,7 @@ export default function SearchPage() {
         {err && <p style={{ color: 'var(--expense)', marginTop: '12px', fontSize: '0.9rem' }}>{err}</p>}
       </div>
 
-      <div style={{ paddingBottom: '88px', padding: '0 16px' }}>
+      <div style={{ paddingBottom: "88px", padding: "0 16px" }}>
         {results.length === 0 && !loading && (
           <p className="empty">No results found. Adjust your search filters.</p>
         )}

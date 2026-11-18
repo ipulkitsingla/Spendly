@@ -122,6 +122,22 @@ router.patch('/budget', authRequired, async (req, res) => {
   }
 });
 
+router.patch('/payday', authRequired, async (req, res) => {
+  try {
+    const { paydayDayOfMonth } = req.body;
+    const num = Math.round(Number(paydayDayOfMonth));
+    if (isNaN(num) || num < 1 || num > 31) {
+      return res.status(400).json({ message: 'Payday must be a day of the month between 1 and 31' });
+    }
+    const user = await User.findByIdAndUpdate(req.userId, { $set: { paydayDayOfMonth: num } }, { new: true }).select('-passwordHash');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json({ paydayDayOfMonth: user.paydayDayOfMonth });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to update payday' });
+  }
+});
+
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
